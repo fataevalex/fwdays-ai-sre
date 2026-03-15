@@ -14,7 +14,7 @@ spec:
             model: "llama3.1:8b"
             apiKey: "dummy"
             config:
-              baseUrl: "http://agentgateway-proxy.agentgateway-system.svc.cluster.local/v1"
+              baseUrl: "http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1"
         nodeSelector:
           node-pool: minipc
         controller:
