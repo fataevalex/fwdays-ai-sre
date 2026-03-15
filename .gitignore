@@ -4,3 +4,4 @@
 *.tfstate.backup
 .terraform/
 kubeconfig-kind.yaml
+.idea/
