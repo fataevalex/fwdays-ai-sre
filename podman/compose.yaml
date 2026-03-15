@@ -13,10 +13,7 @@ services:
     command: ["-f", "/config/config.yaml"]
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:15000/healthz/ready"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      disable: true
 
   kagent-controller:
     image: cr.kagent.dev/kagent-dev/kagent/controller:0.8.0-beta6
@@ -29,8 +26,7 @@ services:
       - KAGENT_AI_MODEL=gemini-2.0-flash-lite
       - KAGENT_AI_API_KEY=dummy
     depends_on:
-      agentgateway:
-        condition: service_healthy
+      - agentgateway
     restart: unless-stopped
 
   kagent-ui:
