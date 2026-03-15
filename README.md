@@ -218,7 +218,25 @@ curl http://localhost:8081/a2a/kagent/k8s-agent -X POST \
     "params": {
       "message": {
         "role": "user",
+        "messageId": "msg-1",
         "parts": [{"kind": "text", "text": "How many nodes are in the cluster?"}]
+      }
+    },
+    "id": "1"
+  }'
+
+# minipc (port-forward svc/k8s-agent 18083:8080 -n kagent first)
+curl http://localhost:18083 -X POST \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "message/stream",
+    "params": {
+      "message": {
+        "role": "user",
+        "messageId": "msg-1",
+        "parts": [{"kind": "text", "text": "List all pods in all namespaces"}]
       }
     },
     "id": "1"
@@ -251,13 +269,13 @@ To extract just the final answer:
 curl -s http://localhost:8081/a2a/kagent/k8s-agent -X POST \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
-  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}' \
+  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","messageId":"msg-1","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}' \
   | grep '"text":"[^"]*"' | tail -1
 
-# minipc (port-forward svc/k8s-agent 8083:8080 -n kagent first)
-curl -s http://localhost:8083/a2a/kagent/k8s-agent -X POST \
+# minipc (port-forward svc/k8s-agent 18083:8080 -n kagent first)
+curl -s http://localhost:18083 -X POST \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
-  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}' \
+  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","messageId":"msg-1","parts":[{"kind":"text","text":"List all pods in all namespaces"}]}},"id":"1"}' \
   | grep '"text":"[^"]*"' | tail -1
 ```
