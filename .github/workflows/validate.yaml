@@ -19,3 +19,26 @@ jobs:
 
       - name: Validate minipc overlay
         run: kubectl kustomize environments/minipc
+
+  secret-scan:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # full history for gitleaks
+
+      - name: Scan for secrets (gitleaks)
+        id: gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        continue-on-error: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Warn if secrets found
+        if: steps.gitleaks.outcome == 'failure'
+        run: |
+          echo "::warning::⚠️  Gitleaks detected potential secrets in the repository!"
+          echo "::warning::Review the gitleaks output above and rotate any exposed credentials."
+          echo "::warning::To suppress false positives add a .gitleaks.toml allowlist."
