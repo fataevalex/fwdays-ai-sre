@@ -13,7 +13,7 @@ spec:
             port: 11434
             openai:
               model: llama3.1:8b
-      # Fallback: Gemini
+      # Fallback: Gemini (when Ollama is unavailable)
       - providers:
           - name: gemini
             gemini:
