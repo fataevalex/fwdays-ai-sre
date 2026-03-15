@@ -14,6 +14,9 @@ AGENTGATEWAY_STANDALONE_VER ?= v1.0.0-rc.2
 KAGENT_VERSION              ?= 0.8.0-beta6
 
 PODMAN                  ?= podman
+# On macOS with podman machine, docker-compose uses docker.sock → podman-machine-default.
+# Use DOCKER_HOST to redirect to the active machine socket if needed.
+# Default: let podman resolve via its default connection.
 PODMAN_COMPOSE          ?= podman compose
 
 # ── Help ──────────────────────────────────────────────────────────────────────
@@ -194,7 +197,7 @@ podman-pull: ## [podman] Pull all container images
 
 .PHONY: podman-up
 podman-up: podman-secrets ## [podman] Start agentgateway + kagent with podman compose
-	$(PODMAN_COMPOSE) -f podman/compose.yaml up -d
+	$(PODMAN_COMPOSE) -f podman/compose.yaml up -d --remove-orphans
 	@echo ""
 	@echo "==> Services started:"
 	@echo "    agentgateway LLM API:  http://localhost:3000/v1"
