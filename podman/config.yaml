@@ -1,4 +1,6 @@
 # yaml-language-server: $schema=https://agentgateway.dev/schema/config
+config:
+  adminAddr: "0.0.0.0:15000"
 binds:
   - port: 3000
     listeners:
