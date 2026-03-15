@@ -9,3 +9,7 @@ patches:
     target:
       kind: Application
       name: kagent
+  - path: kagent-nginx-patch-app-patch.yaml
+    target:
+      kind: Application
+      name: kagent-nginx-patch
