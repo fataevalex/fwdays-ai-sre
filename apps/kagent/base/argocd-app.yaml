@@ -8,8 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: oci://ghcr.io/kagent-dev/kagent/helm
-    chart: kagent
+    repoURL: oci://ghcr.io/kagent-dev/kagent/helm/kagent
     targetRevision: "0.8.0-beta6"
     helm:
       valuesObject:

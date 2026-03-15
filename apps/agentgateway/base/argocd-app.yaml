@@ -8,8 +8,7 @@ metadata:
 spec:
   project: default
   source:
-    repoURL: oci://ghcr.io/kgateway-dev/charts
-    chart: agentgateway
+    repoURL: oci://ghcr.io/kgateway-dev/charts/agentgateway
     targetRevision: "v2.2.1"
     helm:
       valuesObject:
