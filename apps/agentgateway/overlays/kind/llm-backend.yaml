@@ -6,16 +6,8 @@ metadata:
 spec:
   ai:
     groups:
-      # In kind, host.docker.internal resolves to the Docker host (where Ollama may run).
-      # If Ollama is not available locally, only Gemini fallback will be used.
       - providers:
-          - name: ollama-primary
-            host: host.docker.internal
-            port: 11434
-            openai:
-              model: llama3.1:8b
-      - providers:
-          - name: gemini-fallback
+          - name: gemini
             gemini:
               model: gemini-2.0-flash-lite
             policies:

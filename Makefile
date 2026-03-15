@@ -92,15 +92,20 @@ kind-down: ## [kind] Delete kind cluster
 kind-secrets: ## [kind] Create Gemini API secret (reads .env or GEMINI_API_KEY)
 	KUBECONFIG=$(KIND_KUBECONFIG) ./scripts/create-secrets.sh
 
+.PHONY: kind-gateway-api-crds
+kind-gateway-api-crds: ## [kind] Install Kubernetes Gateway API CRDs (required by agentgateway)
+	kubectl --kubeconfig $(KIND_KUBECONFIG) apply -f \
+	  https://github.com/kubernetes-sigs/gateway-api/releases/download/v1.2.1/standard-install.yaml
+
 .PHONY: kind-install-agentgateway
-kind-install-agentgateway: ## [kind] Install agentgateway via Helm
-	helm upgrade --install agentgateway-crds \
+kind-install-agentgateway: kind-gateway-api-crds ## [kind] Install agentgateway via Helm
+\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install agentgateway-crds \
 	  oci://ghcr.io/kgateway-dev/charts/agentgateway-crds \
 	  --version $(AGENTGATEWAY_VERSION) \
 	  --namespace agentgateway-system --create-namespace \
 	  --kubeconfig $(KIND_KUBECONFIG) \
 	  --wait
-	helm upgrade --install agentgateway \
+\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install agentgateway \
 	  oci://ghcr.io/kgateway-dev/charts/agentgateway \
 	  --version $(AGENTGATEWAY_VERSION) \
 	  --namespace agentgateway-system \
@@ -112,13 +117,13 @@ kind-install-agentgateway: ## [kind] Install agentgateway via Helm
 
 .PHONY: kind-install-kagent
 kind-install-kagent: ## [kind] Install kagent via Helm
-	helm upgrade --install kagent-crds \
+\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install kagent-crds \
 	  oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
 	  --version $(KAGENT_VERSION) \
 	  --namespace kagent --create-namespace \
 	  --kubeconfig $(KIND_KUBECONFIG) \
 	  --wait
-	helm upgrade --install kagent \
+\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install kagent \
 	  oci://ghcr.io/kagent-dev/kagent/helm/kagent \
 	  --version $(KAGENT_VERSION) \
 	  --namespace kagent \

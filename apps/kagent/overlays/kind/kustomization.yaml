@@ -1,10 +1,15 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# kind overlay: plain Kubernetes resources only (no ArgoCD Applications).
-# Deployed directly via Helm in the Makefile.
+# kind overlay: applies nginx ConfigMap and patches kagent-ui Deployment.
+# Resources are copied locally to satisfy kustomize path security restrictions.
 
 resources:
-  - ../../base/namespace.yaml
-  - ../../base/nginx-configmap.yaml
-  - ../../base/kustomize-patch/deployment-patch.yaml
+  - nginx-configmap.yaml
+
+patches:
+  - path: deployment-patch.yaml
+    target:
+      kind: Deployment
+      name: kagent-ui
+      namespace: kagent
