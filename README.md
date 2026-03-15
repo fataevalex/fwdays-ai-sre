@@ -67,6 +67,13 @@ make minipc-install    # kubectl apply argocd/app-of-apps-minipc.yaml
 make minipc-status     # watch ArgoCD sync
 ```
 
+| Service | URL |
+|---|---|
+| agentgateway LLM API | http://192.168.0.253:8080/v1 |
+| agentgateway Admin UI | http://192.168.0.253:8080/ui/ |
+| kagent UI | `kubectl port-forward svc/kagent-ui 8082:8080 -n kagent` → http://localhost:8082 |
+| kagent A2A | `kubectl port-forward svc/k8s-agent 8083:8080 -n kagent` → http://localhost:8083 |
+
 ### GitHub Codespaces
 
 1. Set `GEMINI_API_KEY` in repo → Settings → Secrets → Codespaces
@@ -177,6 +184,11 @@ curl http://localhost:3000/v1/chat/completions -X POST \
 curl http://localhost:8080/v1/chat/completions -X POST \
   -H "Content-Type: application/json" \
   -d '{"model":"llama3.1:8b","messages":[{"role":"user","content":"Hello!"}]}'
+
+# minipc (MetalLB IP)
+curl http://192.168.0.253:8080/v1/chat/completions -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"model":"llama3.1:8b","messages":[{"role":"user","content":"Hello!"}]}'
 ```
 
 ### kagent A2A endpoint
@@ -223,7 +235,15 @@ data: {"result": {"artifact": {"parts": [{"kind": "text", "text": "..."}]}, "las
 To extract just the final answer:
 
 ```bash
+# kind
 curl -s http://localhost:8081/a2a/kagent/k8s-agent -X POST \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}' \
+  | grep '"text":"[^"]*"' | tail -1
+
+# minipc (port-forward svc/k8s-agent 8083:8080 -n kagent first)
+curl -s http://localhost:8083/a2a/kagent/k8s-agent -X POST \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
   -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}' \
