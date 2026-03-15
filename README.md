@@ -70,9 +70,21 @@ make minipc-status     # watch ArgoCD sync
 | Service | URL |
 |---|---|
 | agentgateway LLM API | http://192.168.0.253:8080/v1 |
-| agentgateway Admin UI | port-forward only: `kubectl port-forward pod/<agentgateway-proxy-pod> 15000:15000 -n agentgateway-system` → http://localhost:15000/ui/ |
+| agentgateway Admin UI | http://localhost:15000/ui/ (port-forward, see below) |
 | kagent UI | https://kagent.local |
-| kagent A2A | `kubectl port-forward svc/k8s-agent 8083:8080 -n kagent` → http://localhost:8083 |
+| kagent A2A | http://localhost:8083 (port-forward, see below) |
+
+```bash
+# agentgateway Admin UI — binds to localhost inside pod by design, access via port-forward
+kubectl port-forward -n agentgateway-system \
+  $(kubectl get pod -n agentgateway-system -l app.kubernetes.io/name=agentgateway-proxy -o name | head -1) \
+  15000:15000
+# → http://localhost:15000/ui/
+
+# kagent A2A endpoint
+kubectl port-forward svc/k8s-agent 8083:8080 -n kagent
+# → http://localhost:8083
+```
 
 ### GitHub Codespaces
 
