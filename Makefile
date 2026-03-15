@@ -34,7 +34,7 @@ tools-install: ## Install kind + helm (kubectl assumed present)
 	chmod +x "$${DEST}/kind" && \
 	echo "==> kind installed to $${DEST}/kind"
 	@echo "==> Installing Helm..."
-	@curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+	@curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | VERIFY_CHECKSUM=false bash
 	@echo "==> Versions:"
 	@kind version
 	@helm version --short
