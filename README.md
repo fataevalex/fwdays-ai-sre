@@ -30,7 +30,7 @@ make podman-up
 | Service | URL |
 |---|---|
 | agentgateway LLM API | http://localhost:3000/v1 |
-| agentgateway Admin UI | http://localhost:15000/ui/ |
+| agentgateway Admin UI | http://localhost:15000/ui/ (port-forward only) |
 | kagent UI | http://localhost:8080 |
 
 ```bash
@@ -70,7 +70,7 @@ make minipc-status     # watch ArgoCD sync
 | Service | URL |
 |---|---|
 | agentgateway LLM API | http://192.168.0.253:8080/v1 |
-| agentgateway Admin UI | http://192.168.0.253:8080/ui/ |
+| agentgateway Admin UI | port-forward only: `kubectl port-forward pod/<agentgateway-proxy-pod> 15000:15000 -n agentgateway-system` → http://localhost:15000/ui/ |
 | kagent UI | https://kagent.local |
 | kagent A2A | `kubectl port-forward svc/k8s-agent 8083:8080 -n kagent` → http://localhost:8083 |
 
