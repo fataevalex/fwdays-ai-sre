@@ -34,7 +34,10 @@ tools-install: ## Install kind + helm (kubectl assumed present)
 	chmod +x "$${DEST}/kind" && \
 	echo "==> kind installed to $${DEST}/kind"
 	@echo "==> Installing Helm..."
-	@curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | VERIFY_CHECKSUM=false bash
+	@HELM_DEST=$$(if [ -w /usr/local/bin ]; then echo /usr/local/bin; else echo $$HOME/.local/bin; fi); \
+	mkdir -p "$${HELM_DEST}"; \
+	curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | \
+	  VERIFY_CHECKSUM=false HELM_INSTALL_DIR="$${HELM_DEST}" USE_SUDO=false bash
 	@echo "==> Versions:"
 	@kind version
 	@helm version --short
