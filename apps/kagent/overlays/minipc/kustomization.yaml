@@ -1,8 +1,11 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# minipc overlay: deploy only kagent config resources.
-# kagent Helm chart is managed by Flux (gitea-runner-helm repo).
-
 resources:
-  - nginx-configmap.yaml
+  - ../../base
+
+patches:
+  - path: kagent-app-patch.yaml
+    target:
+      kind: Application
+      name: kagent

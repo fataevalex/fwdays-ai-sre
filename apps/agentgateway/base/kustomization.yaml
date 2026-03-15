@@ -3,5 +3,6 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
+  - argocd-app-gateway-api-crds.yaml
   - argocd-app-crds.yaml
   - argocd-app.yaml
