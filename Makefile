@@ -3,6 +3,7 @@ SHELL := /bin/bash
 
 # ── Configuration ─────────────────────────────────────────────────────────────
 KUBECONFIG              ?= ~/.kube/minipc-k3s.yaml
+KIND_VERSION            ?= v0.27.0
 KIND_CLUSTER            ?= fwdays-ai-sre
 KIND_KUBECONFIG         ?= kubeconfig-kind.yaml
 ARGOCD_NAMESPACE        ?= argocd
@@ -18,6 +19,22 @@ PODMAN                  ?= podman
 # Use DOCKER_HOST to redirect to the active machine socket if needed.
 # Default: let podman resolve via its default connection.
 PODMAN_COMPOSE          ?= podman compose
+
+# ── Tools install ─────────────────────────────────────────────────────────────
+
+.PHONY: tools-install
+tools-install: ## Install kind + helm (kubectl assumed present)
+	@echo "==> Installing kind $(KIND_VERSION)..."
+	@OS=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
+	ARCH=$$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
+	curl -sLo /usr/local/bin/kind \
+	  "https://kind.sigs.k8s.io/dl/$(KIND_VERSION)/kind-$${OS}-$${ARCH}" && \
+	chmod +x /usr/local/bin/kind
+	@echo "==> Installing Helm..."
+	@curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+	@echo "==> Versions:"
+	@kind version
+	@helm version --short
 
 # ── Help ──────────────────────────────────────────────────────────────────────
 .PHONY: help

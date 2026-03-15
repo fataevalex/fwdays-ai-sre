@@ -45,6 +45,10 @@ make podman-down               # stop
 cp .env.example .env
 # edit .env → set GEMINI_API_KEY
 
+# GitHub Codespaces: kind and helm are installed automatically via devcontainer post-create
+# On a plain Linux machine (e.g. CI runner) install tools first:
+make tools-install
+
 make dev-up
 ```
 
@@ -108,6 +112,7 @@ make podman-test-agentgateway      # test LLM API
 make podman-test-kagent            # test kagent agent
 
 # kind (no ArgoCD)
+make tools-install                 # install kind + helm (needed on plain Linux / CI)
 make dev-up                        # full setup: kind + secrets + helm install
 make dev-down                      # tear down
 make dev-reset                     # dev-down + dev-up
