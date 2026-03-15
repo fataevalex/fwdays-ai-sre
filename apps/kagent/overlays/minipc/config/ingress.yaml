@@ -1,0 +1,37 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: kagent-local-cert
+  namespace: kagent
+spec:
+  dnsNames:
+    - kagent.local
+  duration: 2160h
+  renewBefore: 360h
+  isCA: false
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: selfsigned-issuer
+  secretName: kagent-local-tls
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: kagent-local
+  namespace: kagent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`kagent.local`)
+      services:
+        - name: kagent-ui
+          port: 8080
+  tls:
+    secretName: kagent-local-tls
