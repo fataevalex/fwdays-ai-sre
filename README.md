@@ -71,7 +71,7 @@ make minipc-status     # watch ArgoCD sync
 |---|---|
 | agentgateway LLM API | http://192.168.0.253:8080/v1 |
 | agentgateway Admin UI | http://192.168.0.253:8080/ui/ |
-| kagent UI | `kubectl port-forward svc/kagent-ui 8082:8080 -n kagent` → http://localhost:8082 |
+| kagent UI | https://kagent.local |
 | kagent A2A | `kubectl port-forward svc/k8s-agent 8083:8080 -n kagent` → http://localhost:8083 |
 
 ### GitHub Codespaces
