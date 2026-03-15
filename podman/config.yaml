@@ -1,0 +1,28 @@
+# yaml-language-server: $schema=https://agentgateway.dev/schema/config
+# agentgateway standalone config
+# API key is loaded from GEMINI_API_KEY environment variable via .env file
+binds:
+  - port: 3000
+    listeners:
+      - routes:
+          - backends:
+              - ai:
+                  groups:
+                    - providers:
+                        - name: gemini
+                          provider:
+                            gemini:
+                              model: gemini-2.0-flash-lite
+                          policies:
+                            backendAuth:
+                              key:
+                                file: /config/gemini-api-key.txt
+          policies:
+            cors:
+              allowOrigins:
+                - "*"
+              allowHeaders:
+                - content-type
+                - authorization
+              exposeHeaders:
+                - "*"

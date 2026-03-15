@@ -1,46 +1,42 @@
 # fwdays-ai-sre
 
-GitOps deployment of [kagent](https://kagent.dev) and [agentgateway](https://agentgateway.dev).
+Lab-1: Basic Agentic Infrastructure deployment of [kagent](https://kagent.dev) and [agentgateway](https://agentgateway.dev).
 
-| Environment | Tool | Notes |
+| Environment | Tool | How |
 |---|---|---|
-| **minipc** (homelab) | ArgoCD | ArgoCD pre-installed in cluster |
-| **kind** (local/Codespaces) | Helm directly | No ArgoCD needed |
+| **podman** (local laptop) | podman compose | standalone agentgateway binary + kagent containers |
+| **kind** (local / GitHub Codespaces) | Helm | direct Helm install, no ArgoCD |
+| **minipc** (homelab k8s) | ArgoCD | app-of-apps GitOps |
 
-**LLM routing via agentgateway:** Ollama primary → Gemini 2.0 Flash Lite fallback.
-
-## Architecture
-
-```
-minipc (ArgoCD):
-  argocd/app-of-apps-minipc.yaml
-    └── environments/minipc/kustomization.yaml
-          ├── apps/agentgateway/overlays/minipc  → ArgoCD Applications + Gateway resources
-          └── apps/kagent/overlays/minipc        → ArgoCD Applications + nginx ConfigMap
-
-kind (Helm):
-  Makefile targets
-    ├── helm install agentgateway-crds + agentgateway  →  kubectl apply -k apps/agentgateway/overlays/kind
-    └── helm install kagent-crds + kagent             →  kubectl apply -k apps/kagent/overlays/kind
-```
+**LLM:** Gemini 2.0 Flash Lite (podman/kind) · Ollama primary + Gemini fallback (minipc)
 
 ## Prerequisites
 
-- `kubectl`, `helm`, `kind`
+- `podman` + `podman compose` — for local laptop
+- `kubectl`, `helm`, `kind` — for kind cluster
 - Gemini API key from [Google AI Studio](https://aistudio.google.com/)
-- For minipc: `argocd` CLI, access to cluster via `~/.kube/minipc-k3s.yaml`
 
 ## Quick Start
 
-### minipc homelab
+### podman (local laptop)
 
 ```bash
 cp .env.example .env
 # edit .env → set GEMINI_API_KEY
 
-make minipc-secrets    # create google-secret in cluster
-make minipc-install    # apply ArgoCD app-of-apps
-make minipc-status     # watch sync status
+make podman-up
+```
+
+| Service | URL |
+|---|---|
+| agentgateway LLM API | http://localhost:3000/v1 |
+| agentgateway Admin UI | http://localhost:15000/ui/ |
+| kagent UI | http://localhost:8080 |
+
+```bash
+make podman-test-agentgateway  # test LLM routing
+make podman-test-kagent        # test k8s-agent
+make podman-down               # stop
 ```
 
 ### kind (local dev / GitHub Codespaces)
@@ -49,72 +45,76 @@ make minipc-status     # watch sync status
 cp .env.example .env
 # edit .env → set GEMINI_API_KEY
 
-make dev-up            # kind cluster + secrets + helm install everything
+make dev-up
 ```
 
-Services available at:
 | Service | URL |
 |---|---|
-| kagent UI | http://localhost:8081 |
-| agentgateway | http://localhost:8080 |
+| kagent UI | http://localhost:8081 (NodePort 30081) |
+| agentgateway | http://localhost:8080 (NodePort 30080) |
 
-Tear down: `make dev-down`
+```bash
+make kind-port-forward-kagent        # or use NodePort directly
+make kind-port-forward-agentgateway
+make dev-down                        # tear down
+```
+
+### minipc homelab (ArgoCD)
+
+```bash
+make minipc-secrets    # create google-secret from .env
+make minipc-install    # kubectl apply argocd/app-of-apps-minipc.yaml
+make minipc-status     # watch ArgoCD sync
+```
 
 ### GitHub Codespaces
 
 1. Set `GEMINI_API_KEY` in repo → Settings → Secrets → Codespaces
-2. Open in Codespaces
-3. Run `make dev-up`
+2. Open in Codespaces → `make dev-up`
 
 ## Makefile reference
 
 ```
-make help                        # Show all targets
+make help                          # all targets
+
+# podman (local laptop)
+make podman-up                     # start all services
+make podman-down                   # stop all services
+make podman-pull                   # pre-pull images
+make podman-status                 # show running containers
+make podman-logs                   # tail all logs
+make podman-logs-agentgateway      # tail agentgateway logs
+make podman-logs-kagent            # tail kagent-controller logs
+make podman-test-agentgateway      # test LLM API
+make podman-test-kagent            # test kagent agent
+
+# kind (no ArgoCD)
+make dev-up                        # full setup: kind + secrets + helm install
+make dev-down                      # tear down
+make dev-reset                     # dev-down + dev-up
+make kind-up / kind-down           # manage kind cluster
+make kind-secrets                  # create Gemini secret
+make kind-install                  # helm install everything
+make kind-install-agentgateway     # helm install agentgateway only
+make kind-install-kagent           # helm install kagent only
+make kind-uninstall                # helm uninstall everything
+make kind-pods                     # show pods
+make kind-port-forward-kagent      # port-forward kagent → :8081
+make kind-port-forward-agentgateway  # port-forward agentgateway → :8080
 
 # minipc (ArgoCD)
-make minipc-secrets              # Create Gemini secret in cluster
-make minipc-install              # Deploy via ArgoCD app-of-apps
-make minipc-uninstall            # Remove all apps
-make minipc-sync-agentgateway    # Force sync agentgateway
-make minipc-sync-kagent          # Force sync kagent
-make minipc-status               # ArgoCD app status
-make minipc-pods                 # Show pods
-make minipc-logs-kagent          # Tail kagent controller logs
-make minipc-logs-agentgateway    # Tail agentgateway logs
+make minipc-secrets                # create Gemini secret
+make minipc-install                # deploy via ArgoCD app-of-apps
+make minipc-uninstall              # remove apps
+make minipc-sync-kagent            # force sync kagent
+make minipc-sync-agentgateway      # force sync agentgateway
+make minipc-status                 # ArgoCD app status
+make minipc-pods                   # show pods
 
-# kind (Helm)
-make kind-up                     # Create kind cluster
-make kind-down                   # Delete kind cluster
-make kind-secrets                # Create Gemini secret in kind
-make kind-install-agentgateway   # Helm install agentgateway
-make kind-install-kagent         # Helm install kagent
-make kind-install                # Helm install all
-make kind-uninstall              # Helm uninstall all
-make kind-pods                   # Show pods in kind
-make kind-port-forward-kagent    # Port-forward kagent UI → :8081
-make kind-port-forward-agentgateway  # Port-forward agentgateway → :8080
-
-# Full dev workflow
-make dev-up                      # kind-up + secrets + helm install
-make dev-down                    # uninstall + kind-down
-make dev-reset                   # dev-down + dev-up
-
-# Validation & tests
-make validate                    # kustomize build all overlays
-make test-kagent                 # Query k8s-agent
-make test-agentgateway           # Query agentgateway LLM
-```
-
-## Secrets
-
-Not stored in git. Created out-of-band:
-
-```bash
-# minipc
-GEMINI_API_KEY=your-key make minipc-secrets
-
-# kind
-GEMINI_API_KEY=your-key make kind-secrets
+# validation & tests
+make validate                      # kustomize build all overlays
+make test-kagent                   # test k8s-agent (set KAGENT_HOST)
+make test-agentgateway             # test LLM routing (set AGENTGATEWAY_HOST)
 ```
 
 ## Repository structure
@@ -125,37 +125,55 @@ GEMINI_API_KEY=your-key make kind-secrets
 │   │   ├── base/              # ArgoCD Applications (CRDs + chart)
 │   │   └── overlays/
 │   │       ├── minipc/        # nodeSelector + Gemini secret + Gateway resources
-│   │       └── kind/          # Gateway resources only (no ArgoCD, no nodeSelector)
+│   │       └── kind/          # Gateway resources (no ArgoCD, no nodeSelector)
 │   └── kagent/
 │       ├── base/              # ArgoCD Applications + nginx ConfigMap
 │       │   └── kustomize-patch/   # wave-3 Deployment patch for nginx mount
 │       └── overlays/
 │           ├── minipc/        # nodeSelector for all sub-charts
-│           └── kind/          # nginx ConfigMap + deployment patch (no ArgoCD)
+│           └── kind/          # nginx ConfigMap + deployment patch
 ├── argocd/
-│   └── app-of-apps-minipc.yaml
+│   └── app-of-apps-minipc.yaml    # minipc only
 ├── environments/
-│   └── minipc/                # kustomize entry point for minipc
+│   └── minipc/                    # kustomize entry point for minipc
+├── podman/
+│   ├── compose.yaml               # podman compose: agentgateway + kagent
+│   ├── config.yaml                # standalone agentgateway config
+│   └── nginx.conf                 # kagent-ui nginx (proxies to controller container)
+├── kind/
+│   ├── cluster.yaml               # kind cluster config
+│   └── helm-values/
+│       ├── agentgateway.yaml      # Helm values for kind
+│       └── kagent.yaml            # Helm values for kind
 ├── scripts/
-│   ├── create-secrets.sh
-│   ├── helm-values-agentgateway-kind.yaml
-│   └── helm-values-kagent-kind.yaml
-├── kind/cluster.yaml
-├── .devcontainer/             # GitHub Codespaces
+│   └── create-secrets.sh
+├── .devcontainer/                 # GitHub Codespaces (kind + kubectl + helm)
 └── Makefile
+```
+
+## Secrets
+
+Not stored in git. API key is provided via `.env` or `GEMINI_API_KEY` env var:
+
+```bash
+# podman: writes podman/gemini-api-key.txt (mounted into container)
+make podman-secrets
+
+# kind / minipc: creates google-secret in agentgateway-system namespace
+make kind-secrets
+make minipc-secrets
 ```
 
 ## Testing
 
 ```bash
-# Test kagent k8s-agent (minipc)
-make test-kagent
+# agentgateway LLM routing (podman)
+curl http://localhost:3000/v1/chat/completions -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gemini-2.0-flash-lite","messages":[{"role":"user","content":"Hello!"}]}'
 
-# Test with kind
-KAGENT_HOST=http://localhost:8081 make test-kagent
-
-# Direct A2A call
-curl -s https://kagent.local/a2a/kagent/k8s-agent -X POST \
+# kagent A2A (podman / kind port-forward)
+curl http://localhost:8080/a2a/kagent/k8s-agent -X POST \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
   -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}'

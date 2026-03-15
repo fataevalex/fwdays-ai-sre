@@ -9,8 +9,12 @@ ARGOCD_NAMESPACE        ?= argocd
 ARGOCD_SERVER           ?= localhost:8080
 ARGOCD_USER             ?= admin
 
-AGENTGATEWAY_VERSION    ?= v2.2.1
-KAGENT_VERSION          ?= 0.8.0-beta6
+AGENTGATEWAY_VERSION        ?= v2.2.1
+AGENTGATEWAY_STANDALONE_VER ?= v1.0.0-rc.2
+KAGENT_VERSION              ?= 0.8.0-beta6
+
+PODMAN                  ?= podman
+PODMAN_COMPOSE          ?= podman compose
 
 # ── Help ──────────────────────────────────────────────────────────────────────
 .PHONY: help
@@ -97,7 +101,7 @@ kind-install-agentgateway: ## [kind] Install agentgateway via Helm
 	  oci://ghcr.io/kgateway-dev/charts/agentgateway \
 	  --version $(AGENTGATEWAY_VERSION) \
 	  --namespace agentgateway-system \
-	  --values scripts/helm-values-agentgateway-kind.yaml \
+	  --values kind/helm-values/agentgateway.yaml \
 	  --kubeconfig $(KIND_KUBECONFIG) \
 	  --wait
 	kubectl --kubeconfig $(KIND_KUBECONFIG) apply \
@@ -115,7 +119,7 @@ kind-install-kagent: ## [kind] Install kagent via Helm
 	  oci://ghcr.io/kagent-dev/kagent/helm/kagent \
 	  --version $(KAGENT_VERSION) \
 	  --namespace kagent \
-	  --values scripts/helm-values-kagent-kind.yaml \
+	  --values kind/helm-values/kagent.yaml \
 	  --kubeconfig $(KIND_KUBECONFIG) \
 	  --wait
 	kubectl --kubeconfig $(KIND_KUBECONFIG) apply \
@@ -157,7 +161,7 @@ kind-port-forward-agentgateway: ## [kind] Port-forward agentgateway → localhos
 # ── Full dev workflow ─────────────────────────────────────────────────────────
 
 .PHONY: dev-up
-dev-up: kind-up kind-secrets kind-install ## [kind] Full dev setup: cluster + secrets + deploy
+dev-up: kind-up kind-secrets kind-install ## [kind] Full dev setup: kind cluster + secrets + helm install
 	@echo ""
 	@echo "==> Dev environment ready!"
 	@echo "    kagent UI:      http://localhost:8081  (NodePort 30081)"
@@ -168,6 +172,69 @@ dev-down: kind-uninstall kind-down ## [kind] Tear down dev environment
 
 .PHONY: dev-reset
 dev-reset: dev-down dev-up ## [kind] Reset dev environment from scratch
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PODMAN — standalone agentgateway + kagent via podman compose (local laptop)
+# ══════════════════════════════════════════════════════════════════════════════
+
+.PHONY: podman-secrets
+podman-secrets: ## [podman] Write Gemini API key to podman/gemini-api-key.txt (reads .env or GEMINI_API_KEY)
+	@if [ -f .env ]; then set -a && source .env && set +a; fi; \
+	if [ -z "$${GEMINI_API_KEY:-}" ]; then \
+	  echo "ERROR: set GEMINI_API_KEY in .env or environment"; exit 1; \
+	fi; \
+	echo -n "Bearer $${GEMINI_API_KEY}" > podman/gemini-api-key.txt
+	@echo "==> podman/gemini-api-key.txt written"
+
+.PHONY: podman-pull
+podman-pull: ## [podman] Pull all container images
+	$(PODMAN) pull cr.agentgateway.dev/agentgateway:$(AGENTGATEWAY_STANDALONE_VER)
+	$(PODMAN) pull cr.kagent.dev/kagent-dev/kagent/controller:$(KAGENT_VERSION)
+	$(PODMAN) pull cr.kagent.dev/kagent-dev/kagent/ui:$(KAGENT_VERSION)
+
+.PHONY: podman-up
+podman-up: podman-secrets ## [podman] Start agentgateway + kagent with podman compose
+	$(PODMAN_COMPOSE) -f podman/compose.yaml up -d
+	@echo ""
+	@echo "==> Services started:"
+	@echo "    agentgateway LLM API:  http://localhost:3000/v1"
+	@echo "    agentgateway Admin UI: http://localhost:15000/ui/"
+	@echo "    kagent UI:             http://localhost:8080"
+
+.PHONY: podman-down
+podman-down: ## [podman] Stop all services
+	$(PODMAN_COMPOSE) -f podman/compose.yaml down
+
+.PHONY: podman-logs
+podman-logs: ## [podman] Tail logs from all services
+	$(PODMAN_COMPOSE) -f podman/compose.yaml logs -f
+
+.PHONY: podman-logs-agentgateway
+podman-logs-agentgateway: ## [podman] Tail agentgateway logs
+	$(PODMAN) logs -f agentgateway
+
+.PHONY: podman-logs-kagent
+podman-logs-kagent: ## [podman] Tail kagent-controller logs
+	$(PODMAN) logs -f kagent-controller
+
+.PHONY: podman-status
+podman-status: ## [podman] Show running containers
+	$(PODMAN_COMPOSE) -f podman/compose.yaml ps
+
+.PHONY: podman-test-agentgateway
+podman-test-agentgateway: ## [podman] Test agentgateway LLM routing
+	curl -s http://localhost:3000/v1/chat/completions -X POST \
+	  -H "Content-Type: application/json" \
+	  -d '{"model":"gemini-2.0-flash-lite","messages":[{"role":"user","content":"Say hello in one sentence."}]}' \
+	  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['choices'][0]['message']['content'])"
+
+.PHONY: podman-test-kagent
+podman-test-kagent: ## [podman] Test kagent k8s-agent
+	curl -s http://localhost:8080/a2a/kagent/k8s-agent -X POST \
+	  -H "Content-Type: application/json" \
+	  -H "Accept: text/event-stream" \
+	  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"How many nodes are in the cluster?"}]}},"id":"1"}' \
+	  | grep -o '"text":"[^"]*"' | tail -1
 
 # ── Validation ────────────────────────────────────────────────────────────────
 
