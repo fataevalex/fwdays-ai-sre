@@ -1,9 +1,7 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
-# minipc: deploy only config resources.
-# Helm charts (agentgateway, kagent) are managed by Flux (gitea-runner-helm).
-
 resources:
-  - ../../apps/agentgateway/overlays/minipc/config
-  - ../../apps/kagent/overlays/minipc/config
+  - helm-repos.yaml
+  - ../../apps/agentgateway/overlays/minipc
+  - ../../apps/kagent/overlays/minipc
