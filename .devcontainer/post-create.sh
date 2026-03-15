@@ -1,19 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Install kind
-KIND_VERSION="v0.27.0"
-echo "==> Installing kind ${KIND_VERSION}..."
-curl -sLo /usr/local/bin/kind \
-  "https://kind.sigs.k8s.io/dl/${KIND_VERSION}/kind-linux-amd64"
-chmod +x /usr/local/bin/kind
-
-# Install helm if not present
-if ! command -v helm &>/dev/null; then
-  echo "==> Installing Helm..."
-  curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
-fi
-
 # Setup .env if not present
 if [[ ! -f .env ]]; then
   cp .env.example .env
