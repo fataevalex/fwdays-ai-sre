@@ -106,8 +106,7 @@ make kind-port-forward-agentgateway  # port-forward agentgateway → :8080
 make minipc-secrets                # create Gemini secret
 make minipc-install                # deploy via ArgoCD app-of-apps
 make minipc-uninstall              # remove apps
-make minipc-sync-kagent            # force sync kagent
-make minipc-sync-agentgateway      # force sync agentgateway
+make minipc-sync                   # force sync fwdays-ai-sre-minipc app
 make minipc-status                 # ArgoCD app status
 make minipc-pods                   # show pods
 

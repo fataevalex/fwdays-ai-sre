@@ -43,18 +43,11 @@ minipc-install: ## [minipc] Deploy via ArgoCD app-of-apps
 minipc-uninstall: ## [minipc] Remove all apps (ArgoCD cascade delete)
 	kubectl --kubeconfig $(KUBECONFIG) delete -f argocd/app-of-apps-minipc.yaml --ignore-not-found
 
-.PHONY: minipc-sync-agentgateway
-minipc-sync-agentgateway: ## [minipc] Force sync agentgateway in ArgoCD
-	argocd app sync agentgateway-crds agentgateway \
+.PHONY: minipc-sync
+minipc-sync: ## [minipc] Force sync fwdays-ai-sre-minipc app in ArgoCD
+	argocd app sync fwdays-ai-sre-minipc \
 	  --server $(ARGOCD_SERVER) --insecure
-	argocd app wait agentgateway \
-	  --server $(ARGOCD_SERVER) --insecure --health
-
-.PHONY: minipc-sync-kagent
-minipc-sync-kagent: ## [minipc] Force sync kagent in ArgoCD
-	argocd app sync kagent-crds kagent kagent-nginx-patch \
-	  --server $(ARGOCD_SERVER) --insecure
-	argocd app wait kagent \
+	argocd app wait fwdays-ai-sre-minipc \
 	  --server $(ARGOCD_SERVER) --insecure --health
 
 .PHONY: minipc-status
@@ -99,13 +92,13 @@ kind-gateway-api-crds: ## [kind] Install Kubernetes Gateway API CRDs (required b
 
 .PHONY: kind-install-agentgateway
 kind-install-agentgateway: kind-gateway-api-crds ## [kind] Install agentgateway via Helm
-\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install agentgateway-crds \
+	HELM_EXPERIMENTAL_OCI=1 helm upgrade --install agentgateway-crds \
 	  oci://ghcr.io/kgateway-dev/charts/agentgateway-crds \
 	  --version $(AGENTGATEWAY_VERSION) \
 	  --namespace agentgateway-system --create-namespace \
 	  --kubeconfig $(KIND_KUBECONFIG) \
 	  --wait
-\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install agentgateway \
+	HELM_EXPERIMENTAL_OCI=1 helm upgrade --install agentgateway \
 	  oci://ghcr.io/kgateway-dev/charts/agentgateway \
 	  --version $(AGENTGATEWAY_VERSION) \
 	  --namespace agentgateway-system \
@@ -117,13 +110,13 @@ kind-install-agentgateway: kind-gateway-api-crds ## [kind] Install agentgateway 
 
 .PHONY: kind-install-kagent
 kind-install-kagent: ## [kind] Install kagent via Helm
-\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install kagent-crds \
+	HELM_EXPERIMENTAL_OCI=1 helm upgrade --install kagent-crds \
 	  oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
 	  --version $(KAGENT_VERSION) \
 	  --namespace kagent --create-namespace \
 	  --kubeconfig $(KIND_KUBECONFIG) \
 	  --wait
-\tHELM_EXPERIMENTAL_OCI=1 helm upgrade --install kagent \
+	HELM_EXPERIMENTAL_OCI=1 helm upgrade --install kagent \
 	  oci://ghcr.io/kagent-dev/kagent/helm/kagent \
 	  --version $(KAGENT_VERSION) \
 	  --namespace kagent \

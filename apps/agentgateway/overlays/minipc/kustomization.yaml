@@ -1,13 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# minipc overlay: deploy only Gateway config resources.
+# agentgateway Helm chart is managed by Flux (gitea-runner-helm repo).
+
 resources:
-  - ../../base
   - gateway.yaml
   - llm-backend.yaml
-
-patches:
-  - path: agentgateway-app-patch.yaml
-    target:
-      kind: Application
-      name: agentgateway
