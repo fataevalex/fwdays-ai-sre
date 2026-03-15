@@ -190,19 +190,18 @@ podman-secrets: ## [podman] Write Gemini API key to podman/gemini-api-key.txt (r
 	@echo "==> podman/gemini-api-key.txt written"
 
 .PHONY: podman-pull
-podman-pull: ## [podman] Pull all container images
+podman-pull: ## [podman] Pull agentgateway image
 	$(PODMAN) pull cr.agentgateway.dev/agentgateway:$(AGENTGATEWAY_STANDALONE_VER)
-	$(PODMAN) pull cr.kagent.dev/kagent-dev/kagent/controller:$(KAGENT_VERSION)
-	$(PODMAN) pull cr.kagent.dev/kagent-dev/kagent/ui:$(KAGENT_VERSION)
 
 .PHONY: podman-up
-podman-up: podman-secrets ## [podman] Start agentgateway + kagent with podman compose
+podman-up: podman-secrets ## [podman] Start agentgateway (standalone, no k8s needed)
 	$(PODMAN_COMPOSE) -f podman/compose.yaml up -d --remove-orphans
 	@echo ""
-	@echo "==> Services started:"
-	@echo "    agentgateway LLM API:  http://localhost:3000/v1"
-	@echo "    agentgateway Admin UI: http://localhost:15000/ui/"
-	@echo "    kagent UI:             http://localhost:8080"
+	@echo "==> agentgateway started:"
+	@echo "    LLM API  (OpenAI-compatible): http://localhost:3000/v1"
+	@echo "    Admin UI:                     http://localhost:15000/ui/"
+	@echo ""
+	@echo "==> For full kagent deployment use: make dev-up (kind + Helm)"
 
 .PHONY: podman-down
 podman-down: ## [podman] Stop all services
@@ -216,9 +215,6 @@ podman-logs: ## [podman] Tail logs from all services
 podman-logs-agentgateway: ## [podman] Tail agentgateway logs
 	$(PODMAN) logs -f agentgateway
 
-.PHONY: podman-logs-kagent
-podman-logs-kagent: ## [podman] Tail kagent-controller logs
-	$(PODMAN) logs -f kagent-controller
 
 .PHONY: podman-status
 podman-status: ## [podman] Show running containers
@@ -231,13 +227,6 @@ podman-test-agentgateway: ## [podman] Test agentgateway LLM routing
 	  -d '{"model":"gemini-2.0-flash-lite","messages":[{"role":"user","content":"Say hello in one sentence."}]}' \
 	  | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['choices'][0]['message']['content'])"
 
-.PHONY: podman-test-kagent
-podman-test-kagent: ## [podman] Test kagent k8s-agent
-	curl -s http://localhost:8080/a2a/kagent/k8s-agent -X POST \
-	  -H "Content-Type: application/json" \
-	  -H "Accept: text/event-stream" \
-	  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"How many nodes are in the cluster?"}]}},"id":"1"}' \
-	  | grep -o '"text":"[^"]*"' | tail -1
 
 # ── Validation ────────────────────────────────────────────────────────────────
 

@@ -1,12 +1,16 @@
 name: fwdays-ai-sre
 
+# Note: only agentgateway runs via podman compose.
+# kagent-controller is a Kubernetes controller and requires a k8s cluster.
+# For full kagent deployment use: make dev-up (kind + Helm)
+
 services:
   agentgateway:
     image: cr.agentgateway.dev/agentgateway:v1.0.0-rc.2
     container_name: agentgateway
     ports:
-      - "3000:3000"   # LLM API (OpenAI-compatible)
-      - "15000:15000" # Admin UI
+      - "3000:3000"    # LLM API (OpenAI-compatible)
+      - "15000:15000"  # Admin UI
     volumes:
       - ./config.yaml:/config/config.yaml:ro
       - ./gemini-api-key.txt:/config/gemini-api-key.txt:ro
@@ -14,28 +18,3 @@ services:
     restart: unless-stopped
     healthcheck:
       disable: true
-
-  kagent-controller:
-    image: cr.kagent.dev/kagent-dev/kagent/controller:0.8.0-beta6
-    container_name: kagent-controller
-    ports:
-      - "8083:8083"
-    environment:
-      - KAGENT_AI_PROVIDER=openAI
-      - KAGENT_AI_BASE_URL=http://agentgateway:3000/v1
-      - KAGENT_AI_MODEL=gemini-2.0-flash-lite
-      - KAGENT_AI_API_KEY=dummy
-    depends_on:
-      - agentgateway
-    restart: unless-stopped
-
-  kagent-ui:
-    image: cr.kagent.dev/kagent-dev/kagent/ui:0.8.0-beta6
-    container_name: kagent-ui
-    ports:
-      - "8080:8080"
-    volumes:
-      - ./nginx.conf:/etc/nginx/nginx.conf:ro
-    depends_on:
-      - kagent-controller
-    restart: unless-stopped
