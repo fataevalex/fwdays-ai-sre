@@ -17,6 +17,3 @@ jobs:
 
       - name: Validate minipc overlay
         run: kubectl kustomize environments/minipc
-
-      - name: Validate kind overlay
-        run: kubectl kustomize environments/kind
