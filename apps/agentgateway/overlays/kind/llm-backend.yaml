@@ -6,6 +6,14 @@ metadata:
 spec:
   ai:
     groups:
+      # Primary: Ollama on minipc (LAN)
+      - providers:
+          - name: ollama
+            host: 192.168.0.152
+            port: 11434
+            openai:
+              model: llama3.1:8b
+      # Fallback: Gemini
       - providers:
           - name: gemini
             gemini:
