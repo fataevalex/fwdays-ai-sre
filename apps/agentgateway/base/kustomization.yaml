@@ -6,3 +6,4 @@ resources:
   - argocd-app-gateway-api-crds.yaml
   - argocd-app-crds.yaml
   - argocd-app.yaml
+  - argocd-app-config.yaml

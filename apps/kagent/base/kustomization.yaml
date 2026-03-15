@@ -3,7 +3,6 @@ kind: Kustomization
 
 resources:
   - namespace.yaml
-  - nginx-configmap.yaml
   - argocd-app-crds.yaml
   - argocd-app.yaml
   - argocd-app-nginx-patch.yaml

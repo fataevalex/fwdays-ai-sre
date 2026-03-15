@@ -3,8 +3,6 @@ kind: Kustomization
 
 resources:
   - ../../base
-  - gateway.yaml
-  - llm-backend.yaml
 
 patches:
   - path: agentgateway-app-patch.yaml
