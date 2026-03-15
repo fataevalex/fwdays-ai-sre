@@ -1,0 +1,29 @@
+{
+  "name": "fwdays-ai-sre",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {},
+    "ghcr.io/devcontainers/features/kubectl-helm-minikube:1": {
+      "version": "latest",
+      "helm": "latest",
+      "minikube": "none"
+    },
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
+  "onCreateCommand": "bash .devcontainer/post-create.sh",
+  "postStartCommand": "echo 'Run: make dev-up'",
+  "forwardPorts": [8080, 8081, 8082],
+  "portsAttributes": {
+    "8080": { "label": "agentgateway", "onAutoForward": "notify" },
+    "8081": { "label": "kagent UI", "onAutoForward": "notify" },
+    "8082": { "label": "ArgoCD UI", "onAutoForward": "notify" }
+  },
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "ms-kubernetes-tools.vscode-kubernetes-tools",
+        "redhat.vscode-yaml"
+      ]
+    }
+  }
+}

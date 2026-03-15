@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kagent-ui
+  namespace: kagent
+spec:
+  template:
+    spec:
+      volumes:
+        - name: nginx-conf
+          configMap:
+            name: kagent-ui-nginx-conf
+      containers:
+        - name: ui
+          volumeMounts:
+            - name: nginx-conf
+              mountPath: /etc/nginx/nginx.conf
+              subPath: nginx.conf

@@ -1,0 +1,6 @@
+.env
+*.sops.yaml
+*.tfstate
+*.tfstate.backup
+.terraform/
+kubeconfig-kind.yaml

@@ -1,0 +1,40 @@
+apiVersion: agentgateway.dev/v1alpha1
+kind: AgentgatewayBackend
+metadata:
+  name: llm
+  namespace: agentgateway-system
+spec:
+  ai:
+    groups:
+      # In kind, host.docker.internal resolves to the Docker host (where Ollama may run).
+      # If Ollama is not available locally, only Gemini fallback will be used.
+      - providers:
+          - name: ollama-primary
+            host: host.docker.internal
+            port: 11434
+            openai:
+              model: llama3.1:8b
+      - providers:
+          - name: gemini-fallback
+            gemini:
+              model: gemini-2.0-flash-lite
+            policies:
+              auth:
+                secretRef:
+                  name: google-secret
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: llm
+  namespace: agentgateway-system
+spec:
+  parentRefs:
+    - name: agentgateway-proxy
+      namespace: agentgateway-system
+  rules:
+    - backendRefs:
+        - name: llm
+          namespace: agentgateway-system
+          group: agentgateway.dev
+          kind: AgentgatewayBackend

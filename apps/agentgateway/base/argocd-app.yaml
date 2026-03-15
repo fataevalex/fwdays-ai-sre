@@ -1,0 +1,28 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: agentgateway
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: oci://ghcr.io/kgateway-dev/charts
+    chart: agentgateway
+    targetRevision: "v2.2.1"
+    helm:
+      valuesObject:
+        controller:
+          extraEnv:
+            KGW_ENABLE_GATEWAY_API_EXPERIMENTAL_FEATURES: "true"
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: agentgateway-system
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

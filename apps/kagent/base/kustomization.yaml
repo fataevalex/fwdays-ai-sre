@@ -1,0 +1,9 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - namespace.yaml
+  - nginx-configmap.yaml
+  - argocd-app-crds.yaml
+  - argocd-app.yaml
+  - argocd-app-nginx-patch.yaml
