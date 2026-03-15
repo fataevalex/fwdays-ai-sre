@@ -27,9 +27,12 @@ tools-install: ## Install kind + helm (kubectl assumed present)
 	@echo "==> Installing kind $(KIND_VERSION)..."
 	@OS=$$(uname -s | tr '[:upper:]' '[:lower:]'); \
 	ARCH=$$(uname -m | sed 's/x86_64/amd64/;s/aarch64/arm64/'); \
-	curl -sLo /usr/local/bin/kind \
+	DEST=$$(if [ -w /usr/local/bin ]; then echo /usr/local/bin; else echo $$HOME/.local/bin; fi); \
+	mkdir -p "$${DEST}"; \
+	curl -sLo "$${DEST}/kind" \
 	  "https://kind.sigs.k8s.io/dl/$(KIND_VERSION)/kind-$${OS}-$${ARCH}" && \
-	chmod +x /usr/local/bin/kind
+	chmod +x "$${DEST}/kind" && \
+	echo "==> kind installed to $${DEST}/kind"
 	@echo "==> Installing Helm..."
 	@curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
 	@echo "==> Versions:"
