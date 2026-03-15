@@ -166,15 +166,67 @@ make minipc-secrets
 
 ## Testing
 
+### agentgateway LLM API
+
 ```bash
-# agentgateway LLM routing (podman)
+# podman (port 3000)
 curl http://localhost:3000/v1/chat/completions -X POST \
   -H "Content-Type: application/json" \
   -d '{"model":"gemini-2.0-flash-lite","messages":[{"role":"user","content":"Hello!"}]}'
 
-# kagent A2A (podman / kind port-forward)
-curl http://localhost:8080/a2a/kagent/k8s-agent -X POST \
+# kind (port 8080)
+curl http://localhost:8080/v1/chat/completions -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"model":"llama3.1:8b","messages":[{"role":"user","content":"Hello!"}]}'
+```
+
+### kagent A2A endpoint
+
+The A2A endpoint streams responses as Server-Sent Events (SSE).
+
+```bash
+# kind (kagent UI on port 8081)
+curl http://localhost:8081/a2a/kagent/k8s-agent -X POST \
   -H "Content-Type: application/json" \
   -H "Accept: text/event-stream" \
-  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}'
+  -d '{
+    "jsonrpc": "2.0",
+    "method": "message/stream",
+    "params": {
+      "message": {
+        "role": "user",
+        "parts": [{"kind": "text", "text": "How many nodes are in the cluster?"}]
+      }
+    },
+    "id": "1"
+  }'
+```
+
+The response is a stream of SSE events:
+
+```
+event: task_status_update
+data: {"result": {"status": {"state": "submitted", ...}}}
+
+event: task_status_update
+data: {"result": {"status": {"state": "working", ...}}}
+
+event: task_status_update          ← agent called a k8s tool, got data back
+data: {"result": {"status": {"message": {"parts": [{"kind": "data", "data": {...}}]}}}}
+
+event: task_status_update          ← final text answer
+data: {"result": {"status": {"message": {"parts": [{"kind": "text", "text": "There are 2 nodes in the cluster."}]}}}}
+
+event: task_artifact_update        ← final artifact (lastChunk: true marks the end)
+data: {"result": {"artifact": {"parts": [{"kind": "text", "text": "..."}]}, "lastChunk": true}}
+```
+
+To extract just the final answer:
+
+```bash
+curl -s http://localhost:8081/a2a/kagent/k8s-agent -X POST \
+  -H "Content-Type: application/json" \
+  -H "Accept: text/event-stream" \
+  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}' \
+  | grep '"text":"[^"]*"' | tail -1
 ```
