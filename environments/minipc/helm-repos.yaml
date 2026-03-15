@@ -9,7 +9,7 @@ type: Opaque
 stringData:
   type: helm
   name: agentgateway-charts
-  url: oci://ghcr.io/kgateway-dev/charts
+  url: ghcr.io/kgateway-dev/charts
   enableOCI: "true"
 ---
 apiVersion: v1
@@ -23,5 +23,5 @@ type: Opaque
 stringData:
   type: helm
   name: kagent-charts
-  url: oci://ghcr.io/kagent-dev/kagent/helm
+  url: ghcr.io/kagent-dev/kagent/helm
   enableOCI: "true"
