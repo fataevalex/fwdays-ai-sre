@@ -1,13 +1,28 @@
 # yaml-language-server: $schema=https://agentgateway.dev/schema/config
-# agentgateway standalone config
-# API key is loaded from GEMINI_API_KEY environment variable via .env file
 binds:
   - port: 3000
     listeners:
       - routes:
-          - backends:
+          - policies:
+              cors:
+                allowOrigins:
+                  - "*"
+                allowHeaders:
+                  - content-type
+                  - authorization
+                exposeHeaders:
+                  - "*"
+            backends:
               - ai:
                   groups:
+                    # Primary: Ollama (local/LAN)
+                    - providers:
+                        - name: ollama
+                          provider:
+                            openAI:
+                              model: llama3.1:8b
+                          hostOverride: "192.168.0.152:11434"
+                    # Fallback: Gemini
                     - providers:
                         - name: gemini
                           provider:
@@ -17,12 +32,3 @@ binds:
                             backendAuth:
                               key:
                                 file: /config/gemini-api-key.txt
-          policies:
-            cors:
-              allowOrigins:
-                - "*"
-              allowHeaders:
-                - content-type
-                - authorization
-              exposeHeaders:
-                - "*"
