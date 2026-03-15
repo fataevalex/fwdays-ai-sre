@@ -1,13 +1,9 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 
+# kind overlay: plain Kubernetes resources only (no ArgoCD Applications).
+# Deployed directly via Helm in the Makefile.
+
 resources:
-  - ../../base
   - gateway.yaml
   - llm-backend.yaml
-
-patches:
-  - path: agentgateway-app-patch.yaml
-    target:
-      kind: Application
-      name: agentgateway

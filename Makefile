@@ -1,144 +1,173 @@
 SHELL := /bin/bash
 .DEFAULT_GOAL := help
 
-KUBECONFIG         ?= ~/.kube/minipc-k3s.yaml
-KIND_CLUSTER       ?= fwdays-ai-sre
-KIND_KUBECONFIG    ?= kubeconfig-kind.yaml
-ARGOCD_NAMESPACE   ?= argocd
-ARGOCD_SERVER      ?= localhost:8082
-ARGOCD_USER        ?= admin
+# ── Configuration ─────────────────────────────────────────────────────────────
+KUBECONFIG              ?= ~/.kube/minipc-k3s.yaml
+KIND_CLUSTER            ?= fwdays-ai-sre
+KIND_KUBECONFIG         ?= kubeconfig-kind.yaml
+ARGOCD_NAMESPACE        ?= argocd
+ARGOCD_SERVER           ?= localhost:8080
+ARGOCD_USER             ?= admin
 
-# ── Helpers ───────────────────────────────────────────────────────────────────
+AGENTGATEWAY_VERSION    ?= v2.2.1
+KAGENT_VERSION          ?= 0.8.0-beta6
 
+# ── Help ──────────────────────────────────────────────────────────────────────
 .PHONY: help
 help: ## Show this help
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
-	  awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-30s\033[0m %s\n", $$1, $$2}' | sort
+	  awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-32s\033[0m %s\n", $$1, $$2}' | sort
 
-# ── Kind cluster ──────────────────────────────────────────────────────────────
+# ══════════════════════════════════════════════════════════════════════════════
+# MINIPC — deploy via ArgoCD (ArgoCD is pre-installed in the cluster)
+# ══════════════════════════════════════════════════════════════════════════════
+
+.PHONY: minipc-secrets
+minipc-secrets: ## [minipc] Create Gemini API secret (reads .env or GEMINI_API_KEY)
+	KUBECONFIG=$(KUBECONFIG) ./scripts/create-secrets.sh
+
+.PHONY: minipc-install
+minipc-install: ## [minipc] Deploy via ArgoCD app-of-apps
+	kubectl --kubeconfig $(KUBECONFIG) apply -f argocd/app-of-apps-minipc.yaml
+	@echo "==> Watching sync status (Ctrl+C to stop)..."
+	@kubectl --kubeconfig $(KUBECONFIG) get applications -n $(ARGOCD_NAMESPACE) -w
+
+.PHONY: minipc-uninstall
+minipc-uninstall: ## [minipc] Remove all apps (ArgoCD cascade delete)
+	kubectl --kubeconfig $(KUBECONFIG) delete -f argocd/app-of-apps-minipc.yaml --ignore-not-found
+
+.PHONY: minipc-sync-agentgateway
+minipc-sync-agentgateway: ## [minipc] Force sync agentgateway in ArgoCD
+	argocd app sync agentgateway-crds agentgateway \
+	  --server $(ARGOCD_SERVER) --insecure
+	argocd app wait agentgateway \
+	  --server $(ARGOCD_SERVER) --insecure --health
+
+.PHONY: minipc-sync-kagent
+minipc-sync-kagent: ## [minipc] Force sync kagent in ArgoCD
+	argocd app sync kagent-crds kagent kagent-nginx-patch \
+	  --server $(ARGOCD_SERVER) --insecure
+	argocd app wait kagent \
+	  --server $(ARGOCD_SERVER) --insecure --health
+
+.PHONY: minipc-status
+minipc-status: ## [minipc] Show ArgoCD application status
+	kubectl --kubeconfig $(KUBECONFIG) get applications -n $(ARGOCD_NAMESPACE)
+
+.PHONY: minipc-pods
+minipc-pods: ## [minipc] Show pods for deployed apps
+	kubectl --kubeconfig $(KUBECONFIG) get pods -n kagent
+	kubectl --kubeconfig $(KUBECONFIG) get pods -n agentgateway-system
+
+.PHONY: minipc-logs-kagent
+minipc-logs-kagent: ## [minipc] Tail kagent controller logs
+	kubectl --kubeconfig $(KUBECONFIG) logs -n kagent deploy/kagent-controller -f
+
+.PHONY: minipc-logs-agentgateway
+minipc-logs-agentgateway: ## [minipc] Tail agentgateway controller logs
+	kubectl --kubeconfig $(KUBECONFIG) logs -n agentgateway-system deploy/agentgateway -f
+
+# ══════════════════════════════════════════════════════════════════════════════
+# KIND — deploy directly via Helm (no ArgoCD)
+# ══════════════════════════════════════════════════════════════════════════════
 
 .PHONY: kind-up
-kind-up: ## Create kind cluster
+kind-up: ## [kind] Create kind cluster
 	kind create cluster --config kind/cluster.yaml --kubeconfig $(KIND_KUBECONFIG)
-	@echo "==> Kubeconfig written to $(KIND_KUBECONFIG)"
+	@echo "==> Kubeconfig: $(KIND_KUBECONFIG)"
 
 .PHONY: kind-down
-kind-down: ## Delete kind cluster
+kind-down: ## [kind] Delete kind cluster
 	kind delete cluster --name $(KIND_CLUSTER)
 	rm -f $(KIND_KUBECONFIG)
 
-.PHONY: kind-kubeconfig
-kind-kubeconfig: ## Export kubeconfig for kind cluster
-	kind export kubeconfig --name $(KIND_CLUSTER) --kubeconfig $(KIND_KUBECONFIG)
-
-# ── Bootstrap (run once per cluster) ─────────────────────────────────────────
-
-.PHONY: bootstrap-argocd-kind
-bootstrap-argocd-kind: ## Install ArgoCD into kind cluster
-	KUBECONFIG=$(KIND_KUBECONFIG) ./scripts/bootstrap-argocd-kind.sh
-
-.PHONY: bootstrap-argocd-repos
-bootstrap-argocd-repos: ## Register OCI Helm repos with ArgoCD
-	ARGOCD_SERVER=$(ARGOCD_SERVER) ARGOCD_USER=$(ARGOCD_USER) \
-	ARGOCD_PASSWORD=$(ARGOCD_PASSWORD) ./scripts/bootstrap-argocd-repos.sh
-
-.PHONY: bootstrap-secrets
-bootstrap-secrets: ## Create Gemini API key secret (reads .env or GEMINI_API_KEY env var)
-	KUBECONFIG=$(KUBECONFIG) ./scripts/create-secrets.sh
-
-.PHONY: bootstrap-secrets-kind
-bootstrap-secrets-kind: ## Create Gemini API key secret in kind cluster
+.PHONY: kind-secrets
+kind-secrets: ## [kind] Create Gemini API secret (reads .env or GEMINI_API_KEY)
 	KUBECONFIG=$(KIND_KUBECONFIG) ./scripts/create-secrets.sh
 
-# ── Deploy via ArgoCD app-of-apps ─────────────────────────────────────────────
+.PHONY: kind-install-agentgateway
+kind-install-agentgateway: ## [kind] Install agentgateway via Helm
+	helm upgrade --install agentgateway-crds \
+	  oci://ghcr.io/kgateway-dev/charts/agentgateway-crds \
+	  --version $(AGENTGATEWAY_VERSION) \
+	  --namespace agentgateway-system --create-namespace \
+	  --kubeconfig $(KIND_KUBECONFIG) \
+	  --wait
+	helm upgrade --install agentgateway \
+	  oci://ghcr.io/kgateway-dev/charts/agentgateway \
+	  --version $(AGENTGATEWAY_VERSION) \
+	  --namespace agentgateway-system \
+	  --values scripts/helm-values-agentgateway-kind.yaml \
+	  --kubeconfig $(KIND_KUBECONFIG) \
+	  --wait
+	kubectl --kubeconfig $(KIND_KUBECONFIG) apply \
+	  -k apps/agentgateway/overlays/kind
 
-.PHONY: install-minipc
-install-minipc: ## Deploy to minipc cluster via ArgoCD app-of-apps
-	kubectl --kubeconfig $(KUBECONFIG) apply -f argocd/app-of-apps-minipc.yaml
-	@echo "==> App-of-apps applied. Watch: make status KUBECONFIG=$(KUBECONFIG)"
+.PHONY: kind-install-kagent
+kind-install-kagent: ## [kind] Install kagent via Helm
+	helm upgrade --install kagent-crds \
+	  oci://ghcr.io/kagent-dev/kagent/helm/kagent-crds \
+	  --version $(KAGENT_VERSION) \
+	  --namespace kagent --create-namespace \
+	  --kubeconfig $(KIND_KUBECONFIG) \
+	  --wait
+	helm upgrade --install kagent \
+	  oci://ghcr.io/kagent-dev/kagent/helm/kagent \
+	  --version $(KAGENT_VERSION) \
+	  --namespace kagent \
+	  --values scripts/helm-values-kagent-kind.yaml \
+	  --kubeconfig $(KIND_KUBECONFIG) \
+	  --wait
+	kubectl --kubeconfig $(KIND_KUBECONFIG) apply \
+	  -k apps/kagent/overlays/kind
 
-.PHONY: install-kind
-install-kind: ## Deploy to kind cluster via ArgoCD app-of-apps
-	kubectl --kubeconfig $(KIND_KUBECONFIG) apply -f argocd/app-of-apps-kind.yaml
-	@echo "==> App-of-apps applied. Watch: make status KUBECONFIG=$(KIND_KUBECONFIG)"
+.PHONY: kind-install
+kind-install: kind-install-agentgateway kind-install-kagent ## [kind] Install all apps via Helm
 
-.PHONY: uninstall-minipc
-uninstall-minipc: ## Remove all apps from minipc (ArgoCD cascade delete)
-	kubectl --kubeconfig $(KUBECONFIG) delete -f argocd/app-of-apps-minipc.yaml --ignore-not-found
+.PHONY: kind-uninstall
+kind-uninstall: ## [kind] Uninstall all apps
+	helm uninstall kagent -n kagent --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
+	helm uninstall kagent-crds -n kagent --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
+	helm uninstall agentgateway -n agentgateway-system --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
+	helm uninstall agentgateway-crds -n agentgateway-system --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
 
-.PHONY: uninstall-kind
-uninstall-kind: ## Remove all apps from kind cluster
-	kubectl --kubeconfig $(KIND_KUBECONFIG) delete -f argocd/app-of-apps-kind.yaml --ignore-not-found
+.PHONY: kind-pods
+kind-pods: ## [kind] Show pods for deployed apps
+	kubectl --kubeconfig $(KIND_KUBECONFIG) get pods -n kagent
+	kubectl --kubeconfig $(KIND_KUBECONFIG) get pods -n agentgateway-system
 
-# ── Individual app sync ───────────────────────────────────────────────────────
+.PHONY: kind-logs-kagent
+kind-logs-kagent: ## [kind] Tail kagent controller logs
+	kubectl --kubeconfig $(KIND_KUBECONFIG) logs -n kagent deploy/kagent-controller -f
 
-.PHONY: sync-agentgateway
-sync-agentgateway: ## Force sync agentgateway apps
-	argocd app sync agentgateway-crds agentgateway --server $(ARGOCD_SERVER) --insecure
-	argocd app wait agentgateway --server $(ARGOCD_SERVER) --insecure --health
+.PHONY: kind-logs-agentgateway
+kind-logs-agentgateway: ## [kind] Tail agentgateway controller logs
+	kubectl --kubeconfig $(KIND_KUBECONFIG) logs -n agentgateway-system deploy/agentgateway -f
 
-.PHONY: sync-kagent
-sync-kagent: ## Force sync kagent apps
-	argocd app sync kagent-crds kagent kagent-nginx-patch --server $(ARGOCD_SERVER) --insecure
-	argocd app wait kagent --server $(ARGOCD_SERVER) --insecure --health
+.PHONY: kind-port-forward-kagent
+kind-port-forward-kagent: ## [kind] Port-forward kagent UI → localhost:8081
+	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/kagent-ui \
+	  -n kagent 8081:80
 
-.PHONY: sync-all
-sync-all: ## Force sync all apps
-	argocd app sync -l app.kubernetes.io/part-of=fwdays-ai-sre \
-	  --server $(ARGOCD_SERVER) --insecure || \
-	argocd app sync fwdays-ai-sre-minipc --server $(ARGOCD_SERVER) --insecure
+.PHONY: kind-port-forward-agentgateway
+kind-port-forward-agentgateway: ## [kind] Port-forward agentgateway → localhost:8080
+	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/agentgateway-proxy \
+	  -n agentgateway-system 8080:80
 
 # ── Full dev workflow ─────────────────────────────────────────────────────────
 
 .PHONY: dev-up
-dev-up: kind-up bootstrap-argocd-kind bootstrap-secrets-kind install-kind ## Full local dev setup: kind + ArgoCD + secrets + deploy (note: ArgoCD on minipc is pre-installed)
+dev-up: kind-up kind-secrets kind-install ## [kind] Full dev setup: cluster + secrets + deploy
+	@echo ""
 	@echo "==> Dev environment ready!"
-	@echo "    kagent UI:       http://localhost:8081"
-	@echo "    agentgateway:   http://localhost:8080"
-	@echo "    ArgoCD UI:      http://localhost:8082  (run: make port-forward-argocd)"
+	@echo "    kagent UI:      http://localhost:8081  (NodePort 30081)"
+	@echo "    agentgateway:  http://localhost:8080  (NodePort 30080)"
 
 .PHONY: dev-down
-dev-down: uninstall-kind kind-down ## Tear down dev environment
+dev-down: kind-uninstall kind-down ## [kind] Tear down dev environment
 
 .PHONY: dev-reset
-dev-reset: dev-down dev-up ## Reset dev environment from scratch
-
-# ── Port forwarding (kind) ────────────────────────────────────────────────────
-
-.PHONY: port-forward-argocd
-port-forward-argocd: ## Port-forward ArgoCD UI (kind) → localhost:8082
-	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/argocd-server \
-	  -n $(ARGOCD_NAMESPACE) 8082:443
-
-.PHONY: port-forward-kagent
-port-forward-kagent: ## Port-forward kagent UI (kind) → localhost:8081
-	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/kagent-ui \
-	  -n kagent 8081:80
-
-.PHONY: port-forward-agentgateway
-port-forward-agentgateway: ## Port-forward agentgateway (kind) → localhost:8080
-	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/agentgateway-proxy \
-	  -n agentgateway-system 8080:80
-
-# ── Status & logs ─────────────────────────────────────────────────────────────
-
-.PHONY: status
-status: ## Show ArgoCD app status
-	kubectl --kubeconfig $(KUBECONFIG) get applications -n $(ARGOCD_NAMESPACE)
-
-.PHONY: pods
-pods: ## Show all pods for deployed apps
-	kubectl --kubeconfig $(KUBECONFIG) get pods -n kagent -n agentgateway-system 2>/dev/null; \
-	kubectl --kubeconfig $(KUBECONFIG) get pods -n kagent; \
-	kubectl --kubeconfig $(KUBECONFIG) get pods -n agentgateway-system
-
-.PHONY: logs-kagent
-logs-kagent: ## Tail kagent controller logs
-	kubectl --kubeconfig $(KUBECONFIG) logs -n kagent deploy/kagent-controller -f
-
-.PHONY: logs-agentgateway
-logs-agentgateway: ## Tail agentgateway controller logs
-	kubectl --kubeconfig $(KUBECONFIG) logs -n agentgateway-system deploy/agentgateway -f
+dev-reset: dev-down dev-up ## [kind] Reset dev environment from scratch
 
 # ── Validation ────────────────────────────────────────────────────────────────
 
@@ -151,21 +180,22 @@ validate-minipc: ## Validate minipc overlay
 
 .PHONY: validate-kind
 validate-kind: ## Validate kind overlay
-	kubectl kustomize environments/kind
+	kubectl kustomize apps/agentgateway/overlays/kind
+	kubectl kustomize apps/kagent/overlays/kind
 
-# ── Test ──────────────────────────────────────────────────────────────────────
+# ── Tests ─────────────────────────────────────────────────────────────────────
 
 .PHONY: test-kagent
-test-kagent: ## Send a test query to kagent k8s-agent
+test-kagent: ## Test kagent k8s-agent (set KAGENT_HOST for non-default endpoint)
 	@HOST=$${KAGENT_HOST:-https://kagent.local}; \
 	curl -s "$${HOST}/a2a/kagent/k8s-agent" -X POST \
 	  -H "Content-Type: application/json" \
 	  -H "Accept: text/event-stream" \
 	  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","parts":[{"kind":"text","text":"How many nodes are in the cluster?"}]}},"id":"test-1"}' \
-	  | grep -o '"text":"[^"]*"' | head -5
+	  | grep -o '"text":"[^"]*"' | tail -1
 
 .PHONY: test-agentgateway
-test-agentgateway: ## Send a test LLM request to agentgateway
+test-agentgateway: ## Test agentgateway LLM routing (set AGENTGATEWAY_HOST for non-default)
 	@HOST=$${AGENTGATEWAY_HOST:-http://agentgateway.local}; \
 	curl -s "$${HOST}/v1/chat/completions" -X POST \
 	  -H "Content-Type: application/json" \

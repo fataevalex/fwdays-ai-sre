@@ -1,48 +1,55 @@
 # fwdays-ai-sre
 
-GitOps deployment of [kagent](https://kagent.dev) and [agentgateway](https://agentgateway.dev) via ArgoCD.
+GitOps deployment of [kagent](https://kagent.dev) and [agentgateway](https://agentgateway.dev).
+
+| Environment | Tool | Notes |
+|---|---|---|
+| **minipc** (homelab) | ArgoCD | ArgoCD pre-installed in cluster |
+| **kind** (local/Codespaces) | Helm directly | No ArgoCD needed |
+
+**LLM routing via agentgateway:** Ollama primary → Gemini 2.0 Flash Lite fallback.
 
 ## Architecture
 
 ```
-ArgoCD app-of-apps
-  └── environments/<env>/kustomization.yaml
-        ├── apps/agentgateway/overlays/<env>   → ArgoCD Applications (CRDs + chart + gateway)
-        └── apps/kagent/overlays/<env>         → ArgoCD Applications (CRDs + chart + nginx patch)
-```
+minipc (ArgoCD):
+  argocd/app-of-apps-minipc.yaml
+    └── environments/minipc/kustomization.yaml
+          ├── apps/agentgateway/overlays/minipc  → ArgoCD Applications + Gateway resources
+          └── apps/kagent/overlays/minipc        → ArgoCD Applications + nginx ConfigMap
 
-**LLM routing:** Ollama (primary) → Gemini 2.0 Flash Lite (fallback) via agentgateway.
+kind (Helm):
+  Makefile targets
+    ├── helm install agentgateway-crds + agentgateway  →  kubectl apply -k apps/agentgateway/overlays/kind
+    └── helm install kagent-crds + kagent             →  kubectl apply -k apps/kagent/overlays/kind
+```
 
 ## Prerequisites
 
-- `kubectl`, `kustomize`, `kind`, `argocd` CLI
+- `kubectl`, `helm`, `kind`
 - Gemini API key from [Google AI Studio](https://aistudio.google.com/)
+- For minipc: `argocd` CLI, access to cluster via `~/.kube/minipc-k3s.yaml`
 
 ## Quick Start
 
-### Option 1 — minipc homelab cluster
+### minipc homelab
 
 ```bash
-# 1. Set Gemini API key secret in cluster
 cp .env.example .env
 # edit .env → set GEMINI_API_KEY
-make bootstrap-secrets
 
-# 2. Deploy via ArgoCD app-of-apps
-make install-minipc
-
-# 3. Watch status
-make status
+make minipc-secrets    # create google-secret in cluster
+make minipc-install    # apply ArgoCD app-of-apps
+make minipc-status     # watch sync status
 ```
 
-### Option 2 — local kind cluster
+### kind (local dev / GitHub Codespaces)
 
 ```bash
 cp .env.example .env
 # edit .env → set GEMINI_API_KEY
 
-# Creates kind cluster + installs ArgoCD + secrets + deploys
-make dev-up
+make dev-up            # kind cluster + secrets + helm install everything
 ```
 
 Services available at:
@@ -50,31 +57,64 @@ Services available at:
 |---|---|
 | kagent UI | http://localhost:8081 |
 | agentgateway | http://localhost:8080 |
-| ArgoCD UI | http://localhost:8082 (run `make port-forward-argocd`) |
 
-### Option 3 — GitHub Codespaces
+Tear down: `make dev-down`
 
-1. Open repo in Codespaces
-2. Set `GEMINI_API_KEY` in Codespaces Secrets (repo settings → Secrets and variables → Codespaces)
-3. Run `make dev-up` in the terminal
+### GitHub Codespaces
 
-## Makefile targets
+1. Set `GEMINI_API_KEY` in repo → Settings → Secrets → Codespaces
+2. Open in Codespaces
+3. Run `make dev-up`
+
+## Makefile reference
 
 ```
-make help                    # Show all targets
-make dev-up                  # Full local setup (kind + ArgoCD + deploy)
-make dev-down                # Tear down local setup
-make install-minipc          # Deploy to minipc cluster
-make bootstrap-secrets       # Create Gemini secret (minipc)
-make bootstrap-secrets-kind  # Create Gemini secret (kind)
-make sync-kagent             # Force sync kagent apps
-make sync-agentgateway       # Force sync agentgateway apps
-make validate                # Validate all kustomize overlays
-make test-kagent             # Send test query to k8s-agent
-make test-agentgateway       # Send test query to agentgateway
-make status                  # Show ArgoCD app status
-make pods                    # Show running pods
-make logs-kagent             # Tail kagent controller logs
+make help                        # Show all targets
+
+# minipc (ArgoCD)
+make minipc-secrets              # Create Gemini secret in cluster
+make minipc-install              # Deploy via ArgoCD app-of-apps
+make minipc-uninstall            # Remove all apps
+make minipc-sync-agentgateway    # Force sync agentgateway
+make minipc-sync-kagent          # Force sync kagent
+make minipc-status               # ArgoCD app status
+make minipc-pods                 # Show pods
+make minipc-logs-kagent          # Tail kagent controller logs
+make minipc-logs-agentgateway    # Tail agentgateway logs
+
+# kind (Helm)
+make kind-up                     # Create kind cluster
+make kind-down                   # Delete kind cluster
+make kind-secrets                # Create Gemini secret in kind
+make kind-install-agentgateway   # Helm install agentgateway
+make kind-install-kagent         # Helm install kagent
+make kind-install                # Helm install all
+make kind-uninstall              # Helm uninstall all
+make kind-pods                   # Show pods in kind
+make kind-port-forward-kagent    # Port-forward kagent UI → :8081
+make kind-port-forward-agentgateway  # Port-forward agentgateway → :8080
+
+# Full dev workflow
+make dev-up                      # kind-up + secrets + helm install
+make dev-down                    # uninstall + kind-down
+make dev-reset                   # dev-down + dev-up
+
+# Validation & tests
+make validate                    # kustomize build all overlays
+make test-kagent                 # Query k8s-agent
+make test-agentgateway           # Query agentgateway LLM
+```
+
+## Secrets
+
+Not stored in git. Created out-of-band:
+
+```bash
+# minipc
+GEMINI_API_KEY=your-key make minipc-secrets
+
+# kind
+GEMINI_API_KEY=your-key make kind-secrets
 ```
 
 ## Repository structure
@@ -82,44 +122,37 @@ make logs-kagent             # Tail kagent controller logs
 ```
 ├── apps/
 │   ├── agentgateway/
-│   │   ├── base/              # ArgoCD Applications + base resources
+│   │   ├── base/              # ArgoCD Applications (CRDs + chart)
 │   │   └── overlays/
-│   │       ├── minipc/        # nodeSelector, Ollama host, Gemini secret
-│   │       └── kind/          # no nodeSelector, host.docker.internal for Ollama
+│   │       ├── minipc/        # nodeSelector + Gemini secret + Gateway resources
+│   │       └── kind/          # Gateway resources only (no ArgoCD, no nodeSelector)
 │   └── kagent/
 │       ├── base/              # ArgoCD Applications + nginx ConfigMap
 │       │   └── kustomize-patch/   # wave-3 Deployment patch for nginx mount
 │       └── overlays/
 │           ├── minipc/        # nodeSelector for all sub-charts
-│           └── kind/          # NodePort UI service
-├── argocd/                    # Root app-of-apps per environment
-├── environments/              # Kustomize entry points (minipc / kind)
-├── kind/                      # kind cluster config
-├── scripts/                   # Bootstrap helpers
-├── .devcontainer/             # GitHub Codespaces config
+│           └── kind/          # nginx ConfigMap + deployment patch (no ArgoCD)
+├── argocd/
+│   └── app-of-apps-minipc.yaml
+├── environments/
+│   └── minipc/                # kustomize entry point for minipc
+├── scripts/
+│   ├── create-secrets.sh
+│   ├── helm-values-agentgateway-kind.yaml
+│   └── helm-values-kagent-kind.yaml
+├── kind/cluster.yaml
+├── .devcontainer/             # GitHub Codespaces
 └── Makefile
-```
-
-## Secrets
-
-Secrets are **not stored in git**. The `google-secret` (Gemini API key) is created out-of-band:
-
-```bash
-# minipc
-GEMINI_API_KEY=your-key make bootstrap-secrets
-
-# kind
-GEMINI_API_KEY=your-key make bootstrap-secrets-kind
 ```
 
 ## Testing
 
 ```bash
-# Test kagent k8s-agent
+# Test kagent k8s-agent (minipc)
 make test-kagent
 
-# Test agentgateway LLM routing
-make test-agentgateway
+# Test with kind
+KAGENT_HOST=http://localhost:8081 make test-kagent
 
 # Direct A2A call
 curl -s https://kagent.local/a2a/kagent/k8s-agent -X POST \
