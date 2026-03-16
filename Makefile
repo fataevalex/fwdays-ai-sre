@@ -175,7 +175,7 @@ kind-logs-agentgateway: ## [kind] Tail agentgateway controller logs
 .PHONY: kind-port-forward-kagent
 kind-port-forward-kagent: ## [kind] Port-forward kagent UI → localhost:8081
 	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/kagent-ui \
-	  -n kagent 8081:80
+	  -n kagent 8081:8080
 
 .PHONY: kind-port-forward-agentgateway
 kind-port-forward-agentgateway: ## [kind] Port-forward agentgateway → localhost:8080
