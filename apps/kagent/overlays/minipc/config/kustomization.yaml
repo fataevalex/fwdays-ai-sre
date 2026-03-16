@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - nginx-configmap.yaml
   - ingress.yaml
+  - oauth2-proxy.yaml

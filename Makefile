@@ -67,6 +67,21 @@ minipc-agentgateway-admin-secret: ## [minipc] Create oauth2-proxy secret for age
 	kubectl --kubeconfig $(KUBECONFIG) apply -f -
 	@echo "==> agentgateway-admin-oauth2 secret created"
 
+.PHONY: minipc-kagent-secret
+minipc-kagent-secret: ## [minipc] Create oauth2-proxy secret for kagent UI (reads .env or KAGENT_CLIENT_SECRET)
+	@if [ -f .env ]; then set -a && source .env && set +a; fi; \
+	if [ -z "$${KAGENT_CLIENT_SECRET:-}" ]; then \
+	  echo "ERROR: set KAGENT_CLIENT_SECRET in .env or environment"; exit 1; \
+	fi; \
+	COOKIE_SECRET=$$(openssl rand -base64 32 | tr -- '+/' '-_' | tr -d '='); \
+	kubectl --kubeconfig $(KUBECONFIG) create secret generic kagent-oauth2 \
+	  --namespace kagent \
+	  --from-literal=client-secret="$${KAGENT_CLIENT_SECRET}" \
+	  --from-literal=cookie-secret="$${COOKIE_SECRET}" \
+	  --dry-run=client -o yaml | \
+	kubectl --kubeconfig $(KUBECONFIG) apply -f -
+	@echo "==> kagent-oauth2 secret created"
+
 .PHONY: minipc-secrets
 minipc-secrets: ## [minipc] Create Gemini API secret (reads .env or GEMINI_API_KEY)
 	KUBECONFIG=$(KUBECONFIG) ./scripts/create-secrets.sh

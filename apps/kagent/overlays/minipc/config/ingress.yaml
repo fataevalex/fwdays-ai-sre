@@ -31,7 +31,7 @@ spec:
     - kind: Rule
       match: Host(`kagent.local`)
       services:
-        - name: kagent-ui
-          port: 8080
+        - name: oauth2-proxy
+          port: 4180
   tls:
     secretName: kagent-local-tls

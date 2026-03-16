@@ -1,0 +1,58 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: oauth2-proxy
+  namespace: kagent
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: oauth2-proxy
+  template:
+    metadata:
+      labels:
+        app: oauth2-proxy
+    spec:
+      nodeSelector:
+        node-pool: minipc
+      containers:
+        - name: oauth2-proxy
+          image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
+          args:
+            - --provider=oidc
+            - --oidc-issuer-url=https://keycloak.fataev.in.ua/realms/homelab
+            - --client-id=kagent
+            - --redirect-url=https://kagent.local/oauth2/callback
+            - --upstream=http://kagent-ui.kagent.svc.cluster.local:8080
+            - --http-address=0.0.0.0:4180
+            - --email-domain=*
+            - --skip-provider-button=true
+            - --cookie-secure=true
+            - --cookie-domain=kagent.local
+            - --whitelist-domain=kagent.local
+            - --proxy-websockets=true
+          env:
+            - name: OAUTH2_PROXY_CLIENT_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kagent-oauth2
+                  key: client-secret
+            - name: OAUTH2_PROXY_COOKIE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: kagent-oauth2
+                  key: cookie-secret
+          ports:
+            - containerPort: 4180
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: oauth2-proxy
+  namespace: kagent
+spec:
+  selector:
+    app: oauth2-proxy
+  ports:
+    - port: 4180
+      targetPort: 4180
