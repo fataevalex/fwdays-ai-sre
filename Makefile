@@ -186,7 +186,12 @@ kind-port-forward-agentgateway: ## [kind] Port-forward agentgateway → localhos
 
 .PHONY: dev-up
 dev-up: kind-up kind-secrets kind-install ## [kind] Full dev setup: kind cluster + secrets + helm install
-	@bash .devcontainer/start-port-forwards.sh || true
+	@kubectl --kubeconfig $(KIND_KUBECONFIG) wait deployment/kagent-ui \
+	  -n kagent --for=condition=Available --timeout=120s
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl port-forward svc/kagent-ui \
+	  -n kagent 8081:8080 --address=0.0.0.0 &
+	@KUBECONFIG=$(KIND_KUBECONFIG) kubectl port-forward svc/agentgateway-proxy \
+	  -n agentgateway-system 8080:8080 --address=0.0.0.0 &
 	@echo ""
 	@echo "==> Dev environment ready!"
 	@echo "    kagent UI:      http://localhost:8081"
