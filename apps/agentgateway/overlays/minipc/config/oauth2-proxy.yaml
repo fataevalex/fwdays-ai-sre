@@ -23,13 +23,14 @@ spec:
             - --oidc-issuer-url=https://keycloak.fataev.in.ua/realms/homelab
             - --client-id=agentgateway-admin
             - --redirect-url=https://agentgateway.local/oauth2/callback
-            - --upstream=static://200
+            - --upstream=http://agentgateway-admin-ui.agentgateway-system.svc.cluster.local:15001
             - --http-address=0.0.0.0:4180
             - --email-domain=*
             - --skip-provider-button=true
             - --cookie-secure=true
             - --cookie-domain=agentgateway.local
             - --whitelist-domain=agentgateway.local
+            - --proxy-websockets=false
           env:
             - name: OAUTH2_PROXY_CLIENT_SECRET
               valueFrom:
