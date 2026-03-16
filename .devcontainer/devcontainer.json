@@ -11,7 +11,7 @@
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "onCreateCommand": "bash .devcontainer/post-create.sh",
-  "postStartCommand": "sudo service docker start 2>/dev/null || true && echo 'Run: make dev-up'",
+  "postStartCommand": "sudo service docker start 2>/dev/null || true && make tools-install && echo 'Run: make dev-up'",
   "forwardPorts": [8080, 8081],
   "portsAttributes": {
     "8080": { "label": "agentgateway", "onAutoForward": "openBrowser" },
