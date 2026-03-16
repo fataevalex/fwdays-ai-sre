@@ -20,7 +20,7 @@ spec:
           image: quay.io/oauth2-proxy/oauth2-proxy:v7.7.1
           args:
             - --provider=oidc
-            - --oidc-issuer-url=https://keycloak.fataev.in.ua/realms/homelan
+            - --oidc-issuer-url=https://keycloak.fataev.in.ua/realms/homelab
             - --client-id=agentgateway-admin
             - --redirect-url=https://agentgateway.local/oauth2/callback
             - --upstream=static://200
