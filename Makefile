@@ -186,10 +186,11 @@ kind-port-forward-agentgateway: ## [kind] Port-forward agentgateway → localhos
 
 .PHONY: dev-up
 dev-up: kind-up kind-secrets kind-install ## [kind] Full dev setup: kind cluster + secrets + helm install
+	@bash .devcontainer/start-port-forwards.sh || true
 	@echo ""
 	@echo "==> Dev environment ready!"
-	@echo "    kagent UI:      http://localhost:8081  (NodePort 30081)"
-	@echo "    agentgateway:  http://localhost:8080  (NodePort 30080)"
+	@echo "    kagent UI:      http://localhost:8081"
+	@echo "    agentgateway:  http://localhost:8080"
 
 .PHONY: dev-down
 dev-down: kind-uninstall kind-down ## [kind] Tear down dev environment
