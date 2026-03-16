@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: agentgateway-admin-ui
+  namespace: agentgateway-system
+spec:
+  selector:
+    app.kubernetes.io/name: agentgateway-proxy
+  ports:
+    - port: 15001
+      targetPort: 15001
+---
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: agentgateway-local-cert
+  namespace: agentgateway-system
+spec:
+  dnsNames:
+    - agentgateway.local
+  duration: 2160h
+  renewBefore: 360h
+  isCA: false
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: selfsigned-issuer
+  secretName: agentgateway-local-tls
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: agentgateway-admin-auth
+  namespace: agentgateway-system
+spec:
+  forwardAuth:
+    address: http://oauth2-proxy.agentgateway-system.svc.cluster.local:4180/oauth2/auth
+    trustForwardHeader: true
+    authResponseHeaders:
+      - X-Auth-Request-User
+      - X-Auth-Request-Email
+      - Set-Cookie
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: agentgateway-local
+  namespace: agentgateway-system
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`agentgateway.local`) && PathPrefix(`/oauth2/`)
+      services:
+        - name: oauth2-proxy
+          port: 4180
+    - kind: Rule
+      match: Host(`agentgateway.local`)
+      middlewares:
+        - name: agentgateway-admin-auth
+      services:
+        - name: agentgateway-admin-ui
+          port: 15001
+  tls:
+    secretName: agentgateway-local-tls

@@ -52,6 +52,21 @@ help: ## Show this help
 # MINIPC — deploy via ArgoCD (ArgoCD is pre-installed in the cluster)
 # ══════════════════════════════════════════════════════════════════════════════
 
+.PHONY: minipc-agentgateway-admin-secret
+minipc-agentgateway-admin-secret: ## [minipc] Create oauth2-proxy secret for agentgateway admin UI (reads .env or AGENTGATEWAY_ADMIN_CLIENT_SECRET)
+	@if [ -f .env ]; then set -a && source .env && set +a; fi; \
+	if [ -z "$${AGENTGATEWAY_ADMIN_CLIENT_SECRET:-}" ]; then \
+	  echo "ERROR: set AGENTGATEWAY_ADMIN_CLIENT_SECRET in .env or environment"; exit 1; \
+	fi; \
+	COOKIE_SECRET=$$(openssl rand -base64 32 | tr -- '+/' '-_' | tr -d '='); \
+	kubectl --kubeconfig $(KUBECONFIG) create secret generic agentgateway-admin-oauth2 \
+	  --namespace agentgateway-system \
+	  --from-literal=client-secret="$${AGENTGATEWAY_ADMIN_CLIENT_SECRET}" \
+	  --from-literal=cookie-secret="$${COOKIE_SECRET}" \
+	  --dry-run=client -o yaml | \
+	kubectl --kubeconfig $(KUBECONFIG) apply -f -
+	@echo "==> agentgateway-admin-oauth2 secret created"
+
 .PHONY: minipc-secrets
 minipc-secrets: ## [minipc] Create Gemini API secret (reads .env or GEMINI_API_KEY)
 	KUBECONFIG=$(KUBECONFIG) ./scripts/create-secrets.sh

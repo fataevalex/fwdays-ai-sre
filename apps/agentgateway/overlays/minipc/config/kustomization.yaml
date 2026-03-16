@@ -4,3 +4,6 @@ kind: Kustomization
 resources:
   - gateway.yaml
   - llm-backend.yaml
+  - admin-nginx-configmap.yaml
+  - oauth2-proxy.yaml
+  - admin-ingress.yaml

@@ -10,6 +10,19 @@ spec:
         spec:
           nodeSelector:
             node-pool: minipc
+          containers:
+            - name: admin-proxy
+              image: nginx:alpine
+              ports:
+                - containerPort: 15001
+              volumeMounts:
+                - name: admin-proxy-conf
+                  mountPath: /etc/nginx/nginx.conf
+                  subPath: nginx.conf
+          volumes:
+            - name: admin-proxy-conf
+              configMap:
+                name: agentgateway-admin-proxy-conf
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
