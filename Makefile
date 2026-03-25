@@ -13,7 +13,7 @@ ARGOCD_USER             ?= admin
 AGENTGATEWAY_VERSION        ?= v2.2.1
 AGENTGATEWAY_STANDALONE_VER ?= v1.0.0-rc.2
 KAGENT_VERSION              ?= 0.8.0-beta6
-PHOENIX_VERSION             ?= arize-phoenix-5.0.18
+PHOENIX_VERSION             ?= arize-phoenix-v9.6.1
 QDRANT_VERSION              ?= 1.17.0
 
 PODMAN                  ?= podman

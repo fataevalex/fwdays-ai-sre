@@ -9,12 +9,14 @@ spec:
   project: default
   source:
     repoURL: https://github.com/Arize-ai/phoenix.git
-    targetRevision: arize-phoenix-5.0.18
-    path: helm/phoenix-helm
+    targetRevision: HEAD
+    path: helm
     helm:
       valuesObject:
         service:
           type: ClusterIP
+        ingress:
+          enabled: false
   destination:
     server: https://kubernetes.default.svc
     namespace: phoenix

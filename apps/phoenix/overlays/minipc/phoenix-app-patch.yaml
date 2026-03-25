@@ -7,8 +7,10 @@ spec:
   source:
     helm:
       valuesObject:
-        nodeSelector:
-          node-pool: minipc
+        deployment:
+          nodeSelector:
+            node-pool: minipc
         service:
           type: ClusterIP
-          port: 6006
+        ingress:
+          enabled: false
