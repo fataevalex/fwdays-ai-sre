@@ -14,3 +14,5 @@ spec:
           type: ClusterIP
         ingress:
           enabled: false
+        auth:
+          enableAuth: false
