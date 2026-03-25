@@ -17,7 +17,7 @@ spec:
         node-pool: minipc
       containers:
         - name: ha-mcp
-          image: kenny000666/homeassistant-mcp:latest
+          image: samcogan/homeassistant-mcp:latest
           ports:
             - containerPort: 3000
           env:
