@@ -4,7 +4,13 @@ metadata:
   name: homeassistant
   namespace: kagent
 spec:
-  description: "Home Assistant MCP server — controls smart home devices and automations"
+  description: "Home Assistant MCP server — controls smart home devices, lights, switches and automations"
   config:
-    sse:
-      url: "http://ha-mcp.ha-mcp.svc.cluster.local:3000/sse"
+    streamableHttp:
+      url: "http://192.168.0.108:8123/api/mcp"
+      headersFrom:
+        - name: Authorization
+          valueFrom:
+            type: Secret
+            valueRef: ha-mcp-token
+            key: authorization-header

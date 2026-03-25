@@ -110,17 +110,17 @@ minipc-status: ## [minipc] Show ArgoCD application status
 	kubectl --kubeconfig $(KUBECONFIG) get applications -n $(ARGOCD_NAMESPACE)
 
 .PHONY: minipc-ha-mcp-secret
-minipc-ha-mcp-secret: ## [minipc] Create Home Assistant token secret for ha-mcp (reads .env or HA_TOKEN)
+minipc-ha-mcp-secret: ## [minipc] Create HA token secret for kagent ToolServer (reads .env or HA_TOKEN)
 	@if [ -f .env ]; then set -a && source .env && set +a; fi; \
 	if [ -z "$${HA_TOKEN:-}" ]; then \
 	  echo "ERROR: set HA_TOKEN in .env or environment"; exit 1; \
 	fi; \
 	kubectl --kubeconfig $(KUBECONFIG) create secret generic ha-mcp-token \
-	  --namespace ha-mcp \
-	  --from-literal=token="$${HA_TOKEN}" \
+	  --namespace kagent \
+	  --from-literal=authorization-header="Bearer $${HA_TOKEN}" \
 	  --dry-run=client -o yaml | \
 	kubectl --kubeconfig $(KUBECONFIG) apply -f -
-	@echo "==> ha-mcp-token secret created"
+	@echo "==> ha-mcp-token secret created in kagent namespace"
 
 .PHONY: minipc-phoenix-secret
 minipc-phoenix-secret: ## [minipc] Create oauth2-proxy secret for Phoenix UI (reads .env or PHOENIX_CLIENT_SECRET)
