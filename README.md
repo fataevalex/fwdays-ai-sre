@@ -1,10 +1,10 @@
 # fwdays-ai-sre
 
-Lab-1: Basic Agentic Infrastructure deployment of [kagent](https://kagent.dev) and [agentgateway](https://agentgateway.dev).
+Lab-1: Basic Agentic Infrastructure deployment of [kagent](https://kagent.dev), [agentgateway](https://agentgateway.dev), [Phoenix](https://phoenix.arize.com) and [Qdrant](https://qdrant.tech).
 
 | Environment | Tool | How |
 |---|---|---|
-| **podman** (local laptop) | podman compose | standalone agentgateway binary + kagent containers |
+| **podman** (local laptop) | podman compose | standalone agentgateway binary + kagent containers + Phoenix + Qdrant |
 | **kind** (local / GitHub Codespaces) | Helm | direct Helm install, no ArgoCD |
 | **minipc** (homelab k8s) | ArgoCD | app-of-apps GitOps |
 
@@ -30,12 +30,12 @@ make podman-up
 | Service | URL |
 |---|---|
 | agentgateway LLM API | http://localhost:3000/v1 |
-| agentgateway Admin UI | http://localhost:15000/ui/ (port-forward only) |
-| kagent UI | http://localhost:8080 |
+| agentgateway Admin UI | http://localhost:15000/ui/ |
+| Phoenix UI | http://localhost:6006 |
+| Qdrant REST API | http://localhost:6333 |
 
 ```bash
 make podman-test-agentgateway  # test LLM routing
-make podman-test-kagent        # test k8s-agent
 make podman-down               # stop
 ```
 
@@ -56,30 +56,41 @@ make dev-up
 |---|---|
 | kagent UI | http://localhost:8081 (NodePort 30081) |
 | agentgateway | http://localhost:8080 (NodePort 30080) |
+| Phoenix UI | `make kind-port-forward-phoenix` → http://localhost:6006 |
+| Qdrant REST API | `make kind-port-forward-qdrant` → http://localhost:6333 |
 
 ```bash
 make kind-port-forward-kagent        # or use NodePort directly
 make kind-port-forward-agentgateway
+make kind-port-forward-phoenix
+make kind-port-forward-qdrant
 make dev-down                        # tear down
 ```
 
 ### minipc homelab (ArgoCD)
 
 ```bash
-make minipc-secrets    # create google-secret from .env
-make minipc-install    # kubectl apply argocd/app-of-apps-minipc.yaml
-make minipc-status     # watch ArgoCD sync
+make minipc-secrets                  # create google-secret from .env
+make minipc-agentgateway-admin-secret  # create oauth2-proxy secret for agentgateway admin
+make minipc-kagent-secret            # create oauth2-proxy secret for kagent
+make minipc-phoenix-secret           # create oauth2-proxy secret for Phoenix
+make minipc-install                  # kubectl apply argocd/app-of-apps-minipc.yaml
+make minipc-status                   # watch ArgoCD sync
 ```
 
-| Service | URL |
-|---|---|
-| agentgateway LLM API | http://192.168.0.253:8080/v1 |
-| agentgateway Admin UI | http://localhost:15000/ui/ (port-forward, see below) |
-| kagent UI | https://kagent.local |
-| kagent A2A | http://localhost:8083 (port-forward, see below) |
+> For `minipc-phoenix-secret` you need to create a `phoenix` OIDC client in Keycloak first:
+> Realm `homelab` → Clients → Create → Client ID: `phoenix`, redirect URI: `https://phoenix.local/oauth2/callback`
+
+| Service | URL | Auth |
+|---|---|---|
+| agentgateway LLM API | http://192.168.0.253:8080/v1 | — |
+| agentgateway Admin UI | https://agentgateway.local | Keycloak |
+| kagent UI | https://kagent.local | Keycloak |
+| Phoenix UI | https://phoenix.local | Keycloak |
+| Qdrant REST API | ClusterIP only — port-forward to access | — |
 
 ```bash
-# agentgateway Admin UI — binds to localhost inside pod by design, access via port-forward
+# agentgateway Admin UI
 kubectl port-forward -n agentgateway-system \
   $(kubectl get pod -n agentgateway-system -l app.kubernetes.io/name=agentgateway-proxy -o name | head -1) \
   15000:15000
@@ -87,7 +98,10 @@ kubectl port-forward -n agentgateway-system \
 
 # kagent A2A endpoint
 kubectl port-forward svc/k8s-agent 8083:8080 -n kagent
-# → http://localhost:8083
+
+# Qdrant REST API
+kubectl port-forward svc/qdrant 6333:6333 -n qdrant
+# → http://localhost:6333
 ```
 
 ### GitHub Codespaces
@@ -107,9 +121,7 @@ make podman-pull                   # pre-pull images
 make podman-status                 # show running containers
 make podman-logs                   # tail all logs
 make podman-logs-agentgateway      # tail agentgateway logs
-make podman-logs-kagent            # tail kagent-controller logs
 make podman-test-agentgateway      # test LLM API
-make podman-test-kagent            # test kagent agent
 
 # kind (no ArgoCD)
 make tools-install                 # install kind + helm (needed on plain Linux / CI)
@@ -121,18 +133,25 @@ make kind-secrets                  # create Gemini secret
 make kind-install                  # helm install everything
 make kind-install-agentgateway     # helm install agentgateway only
 make kind-install-kagent           # helm install kagent only
+make kind-install-phoenix          # helm install Phoenix only
+make kind-install-qdrant           # helm install Qdrant only
 make kind-uninstall                # helm uninstall everything
 make kind-pods                     # show pods
 make kind-port-forward-kagent      # port-forward kagent → :8081
 make kind-port-forward-agentgateway  # port-forward agentgateway → :8080
+make kind-port-forward-phoenix     # port-forward Phoenix UI → :6006
+make kind-port-forward-qdrant      # port-forward Qdrant REST API → :6333
 
 # minipc (ArgoCD)
 make minipc-secrets                # create Gemini secret
+make minipc-agentgateway-admin-secret  # create oauth2-proxy secret for agentgateway admin
+make minipc-kagent-secret          # create oauth2-proxy secret for kagent
+make minipc-phoenix-secret         # create oauth2-proxy secret for Phoenix
 make minipc-install                # deploy via ArgoCD app-of-apps
 make minipc-uninstall              # remove apps
 make minipc-sync                   # force sync fwdays-ai-sre-minipc app
 make minipc-status                 # ArgoCD app status
-make minipc-pods                   # show pods
+make minipc-pods                   # show pods in all namespaces
 
 # validation & tests
 make validate                      # kustomize build all overlays
@@ -147,44 +166,77 @@ make test-agentgateway             # test LLM routing (set AGENTGATEWAY_HOST)
 │   ├── agentgateway/
 │   │   ├── base/              # ArgoCD Applications (CRDs + chart)
 │   │   └── overlays/
-│   │       ├── minipc/        # nodeSelector + Gemini secret + Gateway resources
-│   │       └── kind/          # Gateway resources (no ArgoCD, no nodeSelector)
-│   └── kagent/
-│       ├── base/              # ArgoCD Applications + nginx ConfigMap
-│       │   └── kustomize-patch/   # wave-3 Deployment patch for nginx mount
+│   │       ├── minipc/        # nodeSelector + oauth2-proxy + Traefik IngressRoute
+│   │       └── kind/          # Gateway resources (no ArgoCD, no auth)
+│   ├── kagent/
+│   │   ├── base/              # ArgoCD Applications + nginx ConfigMap
+│   │   │   └── kustomize-patch/   # wave-3 Deployment patch for nginx mount
+│   │   └── overlays/
+│   │       ├── minipc/        # nodeSelector + oauth2-proxy + Traefik IngressRoute
+│   │       └── kind/          # nginx ConfigMap + deployment patch
+│   ├── phoenix/
+│   │   ├── base/              # ArgoCD Applications (Helm from GitHub)
+│   │   └── overlays/
+│   │       ├── minipc/        # nodeSelector + oauth2-proxy + Traefik IngressRoute
+│   │       └── kind/          # (placeholder)
+│   └── qdrant/
+│       ├── base/              # ArgoCD Application (qdrant/qdrant Helm chart)
 │       └── overlays/
-│           ├── minipc/        # nodeSelector for all sub-charts
-│           └── kind/          # nginx ConfigMap + deployment patch
+│           ├── minipc/        # nodeSelector, ClusterIP only
+│           └── kind/          # (placeholder)
 ├── argocd/
-│   └── app-of-apps-minipc.yaml    # minipc only
+│   └── app-of-apps-minipc.yaml    # minipc entry point
 ├── environments/
-│   └── minipc/                    # kustomize entry point for minipc
+│   └── minipc/                    # kustomize entry point (all apps + helm repos)
 ├── podman/
-│   ├── compose.yaml               # podman compose: agentgateway + kagent
-│   ├── config.yaml                # standalone agentgateway config
-│   └── nginx.conf                 # kagent-ui nginx (proxies to controller container)
+│   ├── compose.yaml               # agentgateway + Phoenix + Qdrant
+│   └── config.yaml                # standalone agentgateway config
 ├── kind/
 │   ├── cluster.yaml               # kind cluster config
 │   └── helm-values/
-│       ├── agentgateway.yaml      # Helm values for kind
-│       └── kagent.yaml            # Helm values for kind
+│       ├── agentgateway.yaml
+│       ├── kagent.yaml
+│       ├── phoenix.yaml
+│       └── qdrant.yaml
 ├── scripts/
 │   └── create-secrets.sh
 ├── .devcontainer/                 # GitHub Codespaces (kind + kubectl + helm)
 └── Makefile
 ```
 
+## Components
+
+| Component | Version | Purpose |
+|---|---|---|
+| agentgateway | v2.2.1 | OpenAI-compatible LLM gateway (Ollama + Gemini) |
+| kagent | 0.8.0-beta6 | Kubernetes AI agent |
+| Phoenix | chart 5.0.18 / app 13.18.2 | LLM observability & tracing (OpenTelemetry) |
+| Qdrant | 1.17.0 | Vector database |
+
 ## Secrets
 
-Not stored in git. API key is provided via `.env` or `GEMINI_API_KEY` env var:
+Not stored in git. Created via Makefile targets or manually:
 
 ```bash
-# podman: writes podman/gemini-api-key.txt (mounted into container)
-make podman-secrets
+# Gemini API key → google-secret in agentgateway-system
+make kind-secrets       # kind
+make minipc-secrets     # minipc
 
-# kind / minipc: creates google-secret in agentgateway-system namespace
-make kind-secrets
-make minipc-secrets
+# OAuth2-proxy secrets (minipc only, Keycloak OIDC)
+make minipc-agentgateway-admin-secret  # needs AGENTGATEWAY_ADMIN_CLIENT_SECRET in .env
+make minipc-kagent-secret              # needs KAGENT_CLIENT_SECRET in .env
+make minipc-phoenix-secret             # needs PHOENIX_CLIENT_SECRET in .env
+```
+
+`.env` variables (see `.env.example`):
+
+```
+GEMINI_API_KEY=...
+OLLAMA_HOST=192.168.0.152
+OLLAMA_PORT=11434
+AGENTGATEWAY_ADMIN_CLIENT_SECRET=...
+KAGENT_CLIENT_SECRET=...
+PHOENIX_CLIENT_SECRET=...
 ```
 
 ## Testing
@@ -206,6 +258,16 @@ curl http://localhost:8080/v1/chat/completions -X POST \
 curl http://192.168.0.253:8080/v1/chat/completions -X POST \
   -H "Content-Type: application/json" \
   -d '{"model":"llama3.1:8b","messages":[{"role":"user","content":"Hello!"}]}'
+```
+
+### Qdrant
+
+```bash
+# health check (after port-forward to :6333)
+curl http://localhost:6333/healthz
+
+# list collections
+curl http://localhost:6333/collections
 ```
 
 ### kagent A2A endpoint
@@ -246,41 +308,4 @@ curl http://localhost:18083 -X POST \
     },
     "id": "1"
   }'
-```
-
-The response is a stream of SSE events:
-
-```
-event: task_status_update
-data: {"result": {"status": {"state": "submitted", ...}}}
-
-event: task_status_update
-data: {"result": {"status": {"state": "working", ...}}}
-
-event: task_status_update          ← agent called a k8s tool, got data back
-data: {"result": {"status": {"message": {"parts": [{"kind": "data", "data": {...}}]}}}}
-
-event: task_status_update          ← final text answer
-data: {"result": {"status": {"message": {"parts": [{"kind": "text", "text": "There are 2 nodes in the cluster."}]}}}}
-
-event: task_artifact_update        ← final artifact (lastChunk: true marks the end)
-data: {"result": {"artifact": {"parts": [{"kind": "text", "text": "..."}]}, "lastChunk": true}}
-```
-
-To extract just the final answer:
-
-```bash
-# kind
-curl -s http://localhost:8081/a2a/kagent/k8s-agent -X POST \
-  -H "Content-Type: application/json" \
-  -H "Accept: text/event-stream" \
-  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","messageId":"msg-1","parts":[{"kind":"text","text":"List all namespaces"}]}},"id":"1"}' \
-  | grep '"text":"[^"]*"' | tail -1
-
-# minipc (port-forward svc/k8s-agent 18083:8080 -n kagent first)
-curl -s http://localhost:18083 -X POST \
-  -H "Content-Type: application/json" \
-  -H "Accept: text/event-stream" \
-  -d '{"jsonrpc":"2.0","method":"message/stream","params":{"message":{"role":"user","messageId":"msg-1","parts":[{"kind":"text","text":"List all pods in all namespaces"}]}},"id":"1"}' \
-  | grep '"text":"[^"]*"' | tail -1
 ```
