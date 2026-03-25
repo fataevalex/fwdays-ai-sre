@@ -25,3 +25,16 @@ stringData:
   name: kagent-charts
   url: ghcr.io/kagent-dev/kagent/helm
   enableOCI: "true"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-qdrant-helm
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+type: Opaque
+stringData:
+  type: helm
+  name: qdrant-charts
+  url: https://qdrant.github.io/qdrant-helm

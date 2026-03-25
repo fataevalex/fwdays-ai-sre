@@ -1,0 +1,37 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: phoenix-local-cert
+  namespace: phoenix
+spec:
+  dnsNames:
+    - phoenix.local
+  duration: 2160h
+  renewBefore: 360h
+  isCA: false
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: selfsigned-issuer
+  secretName: phoenix-local-tls
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: phoenix-local
+  namespace: phoenix
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`phoenix.local`)
+      services:
+        - name: oauth2-proxy
+          port: 4180
+  tls:
+    secretName: phoenix-local-tls

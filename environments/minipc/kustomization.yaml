@@ -5,3 +5,5 @@ resources:
   - helm-repos.yaml
   - ../../apps/agentgateway/overlays/minipc
   - ../../apps/kagent/overlays/minipc
+  - ../../apps/phoenix/overlays/minipc
+  - ../../apps/qdrant/overlays/minipc

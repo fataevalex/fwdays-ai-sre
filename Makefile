@@ -13,6 +13,8 @@ ARGOCD_USER             ?= admin
 AGENTGATEWAY_VERSION        ?= v2.2.1
 AGENTGATEWAY_STANDALONE_VER ?= v1.0.0-rc.2
 KAGENT_VERSION              ?= 0.8.0-beta6
+PHOENIX_VERSION             ?= arize-phoenix-5.0.18
+QDRANT_VERSION              ?= 1.17.0
 
 PODMAN                  ?= podman
 # On macOS with podman machine, docker-compose uses docker.sock → podman-machine-default.
@@ -107,10 +109,27 @@ minipc-sync: ## [minipc] Force sync fwdays-ai-sre-minipc app in ArgoCD
 minipc-status: ## [minipc] Show ArgoCD application status
 	kubectl --kubeconfig $(KUBECONFIG) get applications -n $(ARGOCD_NAMESPACE)
 
+.PHONY: minipc-phoenix-secret
+minipc-phoenix-secret: ## [minipc] Create oauth2-proxy secret for Phoenix UI (reads .env or PHOENIX_CLIENT_SECRET)
+	@if [ -f .env ]; then set -a && source .env && set +a; fi; \
+	if [ -z "$${PHOENIX_CLIENT_SECRET:-}" ]; then \
+	  echo "ERROR: set PHOENIX_CLIENT_SECRET in .env or environment"; exit 1; \
+	fi; \
+	COOKIE_SECRET=$$(openssl rand -base64 32 | tr -- '+/' '-_' | tr -d '='); \
+	kubectl --kubeconfig $(KUBECONFIG) create secret generic phoenix-oauth2 \
+	  --namespace phoenix \
+	  --from-literal=client-secret="$${PHOENIX_CLIENT_SECRET}" \
+	  --from-literal=cookie-secret="$${COOKIE_SECRET}" \
+	  --dry-run=client -o yaml | \
+	kubectl --kubeconfig $(KUBECONFIG) apply -f -
+	@echo "==> phoenix-oauth2 secret created"
+
 .PHONY: minipc-pods
 minipc-pods: ## [minipc] Show pods for deployed apps
 	kubectl --kubeconfig $(KUBECONFIG) get pods -n kagent
 	kubectl --kubeconfig $(KUBECONFIG) get pods -n agentgateway-system
+	kubectl --kubeconfig $(KUBECONFIG) get pods -n phoenix
+	kubectl --kubeconfig $(KUBECONFIG) get pods -n qdrant
 
 .PHONY: minipc-logs-kagent
 minipc-logs-kagent: ## [minipc] Tail kagent controller logs
@@ -179,8 +198,30 @@ kind-install-kagent: ## [kind] Install kagent via Helm
 	kubectl --kubeconfig $(KIND_KUBECONFIG) apply \
 	  -k apps/kagent/overlays/kind
 
+.PHONY: kind-install-phoenix
+kind-install-phoenix: ## [kind] Install Phoenix via Helm (from GitHub source)
+	@tmpdir=$$(mktemp -d); \
+	git clone --depth 1 --branch $(PHOENIX_VERSION) \
+	  https://github.com/Arize-ai/phoenix.git "$$tmpdir/phoenix" 2>/dev/null; \
+	helm upgrade --install phoenix "$$tmpdir/phoenix/helm/phoenix-helm" \
+	  --namespace phoenix --create-namespace \
+	  --values kind/helm-values/phoenix.yaml \
+	  --kubeconfig $(KIND_KUBECONFIG) \
+	  --wait; \
+	rm -rf "$$tmpdir"
+
+.PHONY: kind-install-qdrant
+kind-install-qdrant: ## [kind] Install Qdrant via Helm
+	helm upgrade --install qdrant qdrant/qdrant \
+	  --repo https://qdrant.github.io/qdrant-helm \
+	  --version $(QDRANT_VERSION) \
+	  --namespace qdrant --create-namespace \
+	  --values kind/helm-values/qdrant.yaml \
+	  --kubeconfig $(KIND_KUBECONFIG) \
+	  --wait
+
 .PHONY: kind-install
-kind-install: kind-install-agentgateway kind-install-kagent ## [kind] Install all apps via Helm
+kind-install: kind-install-agentgateway kind-install-kagent kind-install-phoenix kind-install-qdrant ## [kind] Install all apps via Helm
 
 .PHONY: kind-uninstall
 kind-uninstall: ## [kind] Uninstall all apps
@@ -188,6 +229,8 @@ kind-uninstall: ## [kind] Uninstall all apps
 	helm uninstall kagent-crds -n kagent --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
 	helm uninstall agentgateway -n agentgateway-system --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
 	helm uninstall agentgateway-crds -n agentgateway-system --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
+	helm uninstall phoenix -n phoenix --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
+	helm uninstall qdrant -n qdrant --kubeconfig $(KIND_KUBECONFIG) --ignore-not-found
 
 .PHONY: kind-pods
 kind-pods: ## [kind] Show pods for deployed apps
@@ -211,6 +254,16 @@ kind-port-forward-kagent: ## [kind] Port-forward kagent UI → localhost:8081
 kind-port-forward-agentgateway: ## [kind] Port-forward agentgateway → localhost:8080
 	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/agentgateway-proxy \
 	  -n agentgateway-system 8080:80
+
+.PHONY: kind-port-forward-phoenix
+kind-port-forward-phoenix: ## [kind] Port-forward Phoenix UI → localhost:6006
+	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/phoenix \
+	  -n phoenix 6006:6006
+
+.PHONY: kind-port-forward-qdrant
+kind-port-forward-qdrant: ## [kind] Port-forward Qdrant REST API → localhost:6333
+	kubectl --kubeconfig $(KIND_KUBECONFIG) port-forward svc/qdrant \
+	  -n qdrant 6333:6333
 
 # ── Full dev workflow ─────────────────────────────────────────────────────────
 
@@ -298,6 +351,8 @@ validate-minipc: ## Validate minipc overlay
 validate-kind: ## Validate kind overlay
 	kubectl kustomize apps/agentgateway/overlays/kind
 	kubectl kustomize apps/kagent/overlays/kind
+	kubectl kustomize apps/phoenix/overlays/minipc
+	kubectl kustomize apps/qdrant/overlays/minipc
 
 # ── Tests ─────────────────────────────────────────────────────────────────────
 

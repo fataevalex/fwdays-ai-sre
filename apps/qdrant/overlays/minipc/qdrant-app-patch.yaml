@@ -1,0 +1,17 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: qdrant
+  namespace: argocd
+spec:
+  source:
+    helm:
+      valuesObject:
+        replicaCount: 1
+        nodeSelector:
+          node-pool: minipc
+        service:
+          type: ClusterIP
+        tolerations: []
+        persistence:
+          storageClassName: ""
