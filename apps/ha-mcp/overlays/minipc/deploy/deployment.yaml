@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ha-mcp
+  namespace: ha-mcp
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ha-mcp
+  template:
+    metadata:
+      labels:
+        app: ha-mcp
+    spec:
+      nodeSelector:
+        node-pool: minipc
+      containers:
+        - name: ha-mcp
+          image: kenny000666/homeassistant-mcp:latest
+          ports:
+            - containerPort: 3000
+          env:
+            - name: HASS_HOST
+              value: "http://192.168.0.108:8123"
+            - name: HASS_SOCKET_URL
+              value: "ws://192.168.0.108:8123/api/websocket"
+            - name: PORT
+              value: "3000"
+            - name: NODE_ENV
+              value: "production"
+            - name: HASS_TOKEN
+              valueFrom:
+                secretKeyRef:
+                  name: ha-mcp-token
+                  key: token
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 3000
+            initialDelaySeconds: 15
+            periodSeconds: 30

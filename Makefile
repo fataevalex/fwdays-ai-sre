@@ -109,6 +109,19 @@ minipc-sync: ## [minipc] Force sync fwdays-ai-sre-minipc app in ArgoCD
 minipc-status: ## [minipc] Show ArgoCD application status
 	kubectl --kubeconfig $(KUBECONFIG) get applications -n $(ARGOCD_NAMESPACE)
 
+.PHONY: minipc-ha-mcp-secret
+minipc-ha-mcp-secret: ## [minipc] Create Home Assistant token secret for ha-mcp (reads .env or HA_TOKEN)
+	@if [ -f .env ]; then set -a && source .env && set +a; fi; \
+	if [ -z "$${HA_TOKEN:-}" ]; then \
+	  echo "ERROR: set HA_TOKEN in .env or environment"; exit 1; \
+	fi; \
+	kubectl --kubeconfig $(KUBECONFIG) create secret generic ha-mcp-token \
+	  --namespace ha-mcp \
+	  --from-literal=token="$${HA_TOKEN}" \
+	  --dry-run=client -o yaml | \
+	kubectl --kubeconfig $(KUBECONFIG) apply -f -
+	@echo "==> ha-mcp-token secret created"
+
 .PHONY: minipc-phoenix-secret
 minipc-phoenix-secret: ## [minipc] Create oauth2-proxy secret for Phoenix UI (reads .env or PHOENIX_CLIENT_SECRET)
 	@if [ -f .env ]; then set -a && source .env && set +a; fi; \
@@ -130,6 +143,7 @@ minipc-pods: ## [minipc] Show pods for deployed apps
 	kubectl --kubeconfig $(KUBECONFIG) get pods -n agentgateway-system
 	kubectl --kubeconfig $(KUBECONFIG) get pods -n phoenix
 	kubectl --kubeconfig $(KUBECONFIG) get pods -n qdrant
+	kubectl --kubeconfig $(KUBECONFIG) get pods -n ha-mcp
 
 .PHONY: minipc-logs-kagent
 minipc-logs-kagent: ## [minipc] Tail kagent controller logs

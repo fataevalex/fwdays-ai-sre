@@ -7,3 +7,4 @@ resources:
   - ../../apps/kagent/overlays/minipc
   - ../../apps/phoenix/overlays/minipc
   - ../../apps/qdrant/overlays/minipc
+  - ../../apps/ha-mcp/overlays/minipc

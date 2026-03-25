@@ -1,0 +1,10 @@
+apiVersion: kagent.dev/v1alpha1
+kind: ToolServer
+metadata:
+  name: homeassistant
+  namespace: kagent
+spec:
+  description: "Home Assistant MCP server — controls smart home devices and automations"
+  config:
+    sse:
+      url: "http://ha-mcp.ha-mcp.svc.cluster.local:3000/sse"
