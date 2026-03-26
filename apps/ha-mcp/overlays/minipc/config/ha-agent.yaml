@@ -42,6 +42,27 @@ spec:
           apiGroup: kagent.dev
           kind: RemoteMCPServer
           name: homeassistant
+          toolNames:
+            - HassTurnOn
+            - HassTurnOff
+            - HassCancelAllTimers
+            - HassClimateSetTemperature
+            - HassLightSet
+            - HassListAddItem
+            - HassListCompleteItem
+            - HassListRemoveItem
+            - HassMediaUnpause
+            - HassMediaPause
+            - HassMediaNext
+            - HassMediaPrevious
+            - HassSetVolume
+            - HassSetVolumeRelative
+            - HassMediaPlayerMute
+            - HassMediaPlayerUnmute
+            - HassMediaSearchAndPlay
+            - GetDateTime
+            - todo_get_items
+            - GetLiveContext
     deployment:
       resources:
         requests:
