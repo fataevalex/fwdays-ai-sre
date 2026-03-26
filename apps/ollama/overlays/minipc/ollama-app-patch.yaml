@@ -9,9 +9,6 @@ spec:
       valuesObject:
         replicaCount: 1
         ollama:
-          models:
-            pull:
-              - qwen2.5:3b
           gpu:
             enabled: false
         affinity:

@@ -1,0 +1,44 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: ollama-pull-qwen2
+  namespace: ollama
+  annotations:
+    argocd.argoproj.io/sync-wave: "3"
+    argocd.argoproj.io/hook: Sync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
+spec:
+  ttlSecondsAfterFinished: 600
+  template:
+    spec:
+      restartPolicy: OnFailure
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              - matchExpressions:
+                  - key: kubernetes.io/hostname
+                    operator: In
+                    values:
+                      - minipc
+      initContainers:
+        - name: wait-for-ollama
+          image: busybox
+          command:
+            - sh
+            - -c
+            - |
+              until wget -qO- http://ollama.ollama.svc.cluster.local:11434/api/tags > /dev/null 2>&1; do
+                echo "Waiting for Ollama..."; sleep 5;
+              done
+              echo "Ollama is ready"
+      containers:
+        - name: pull
+          image: curlimages/curl:latest
+          command:
+            - sh
+            - -c
+            - |
+              curl -s http://ollama.ollama.svc.cluster.local:11434/api/pull \
+                -d '{"name":"qwen2.5:3b"}' \
+                --max-time 1800
