@@ -7,7 +7,7 @@ spec:
   source:
     helm:
       valuesObject:
-        replicaCount: 2
+        replicaCount: 1
         ollama:
           models:
             pull:
@@ -24,12 +24,6 @@ spec:
                       values:
                         - minipc
                         - minipc3
-          podAntiAffinity:
-            requiredDuringSchedulingIgnoredDuringExecution:
-              - labelSelector:
-                  matchLabels:
-                    app.kubernetes.io/name: ollama
-                topologyKey: kubernetes.io/hostname
         resources:
           requests:
             cpu: "4"
@@ -40,6 +34,7 @@ spec:
         persistentVolume:
           enabled: true
           size: 20Gi
+          storageClass: local-path
         service:
           type: ClusterIP
           port: 11434
