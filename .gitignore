@@ -1,5 +1,5 @@
 .env
-*.sops.yaml
+# *.sops.yaml are SOPS-encrypted secrets — safe to commit
 *.tfstate
 *.tfstate.backup
 .terraform/
