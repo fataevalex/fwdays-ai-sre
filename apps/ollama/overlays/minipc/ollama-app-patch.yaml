@@ -23,7 +23,6 @@ spec:
                       operator: In
                       values:
                         - minipc
-                        - minipc3
         resources:
           requests:
             cpu: "4"
