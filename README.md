@@ -1,12 +1,12 @@
 # fwdays-ai-sre
 
-Lab-1: Basic Agentic Infrastructure deployment of [kagent](https://kagent.dev), [agentgateway](https://agentgateway.dev), [Phoenix](https://phoenix.arize.com) and [Qdrant](https://qdrant.tech).
+Lab-1: Basic Agentic Infrastructure deployment of [kagent](https://kagent.dev), [agentgateway](https://agentgateway.dev), [Phoenix](https://phoenix.arize.com), [Qdrant](https://qdrant.tech) and [Home Assistant MCP](https://www.home-assistant.io/blog/2025/02/04/mcp-server/).
 
 | Environment | Tool | How |
 |---|---|---|
 | **podman** (local laptop) | podman compose | standalone agentgateway binary + kagent containers + Phoenix + Qdrant |
 | **kind** (local / GitHub Codespaces) | Helm | direct Helm install, no ArgoCD |
-| **minipc** (homelab k8s) | ArgoCD | app-of-apps GitOps |
+| **minipc** (homelab k8s) | ArgoCD + Flux | app-of-apps GitOps; Flux manages SOPS-encrypted secrets |
 
 **LLM:** Gemini 2.0 Flash Lite (podman/kind) · Ollama primary + Gemini fallback (minipc)
 
@@ -74,12 +74,16 @@ make minipc-secrets                  # create google-secret from .env
 make minipc-agentgateway-admin-secret  # create oauth2-proxy secret for agentgateway admin
 make minipc-kagent-secret            # create oauth2-proxy secret for kagent
 make minipc-phoenix-secret           # create oauth2-proxy secret for Phoenix
+make minipc-ha-mcp-secret            # encrypt HA token with SOPS → apps/ha-mcp/overlays/minipc/secrets/
 make minipc-install                  # kubectl apply argocd/app-of-apps-minipc.yaml
 make minipc-status                   # watch ArgoCD sync
 ```
 
 > For `minipc-phoenix-secret` you need to create a `phoenix` OIDC client in Keycloak first:
 > Realm `homelab` → Clients → Create → Client ID: `phoenix`, redirect URI: `https://phoenix.local/oauth2/callback`
+
+> The Home Assistant token (`minipc-ha-mcp-secret`) is encrypted with AWS KMS via SOPS and committed to git.
+> Flux CD decrypts it at deploy time using `kube2iam-aws-credentials`.
 
 | Service | URL | Auth |
 |---|---|---|
@@ -88,6 +92,7 @@ make minipc-status                   # watch ArgoCD sync
 | kagent UI | https://kagent.local | Keycloak |
 | Phoenix UI | https://phoenix.local | Keycloak |
 | Qdrant REST API | ClusterIP only — port-forward to access | — |
+| Home Assistant MCP | via kagent k8s-agent (RemoteMCPServer) | Bearer token (SOPS) |
 
 ```bash
 # agentgateway Admin UI
@@ -147,6 +152,7 @@ make minipc-secrets                # create Gemini secret
 make minipc-agentgateway-admin-secret  # create oauth2-proxy secret for agentgateway admin
 make minipc-kagent-secret          # create oauth2-proxy secret for kagent
 make minipc-phoenix-secret         # create oauth2-proxy secret for Phoenix
+make minipc-ha-mcp-secret          # SOPS-encrypt HA token → commit to git (Flux decrypts)
 make minipc-install                # deploy via ArgoCD app-of-apps
 make minipc-uninstall              # remove apps
 make minipc-sync                   # force sync fwdays-ai-sre-minipc app
@@ -179,11 +185,19 @@ make test-agentgateway             # test LLM routing (set AGENTGATEWAY_HOST)
 │   │   └── overlays/
 │   │       ├── minipc/        # nodeSelector + oauth2-proxy + Traefik IngressRoute
 │   │       └── kind/          # (placeholder)
-│   └── qdrant/
-│       ├── base/              # ArgoCD Application (qdrant/qdrant Helm chart)
-│       └── overlays/
-│           ├── minipc/        # nodeSelector, ClusterIP only
-│           └── kind/          # (placeholder)
+│   ├── qdrant/
+│   │   ├── base/              # ArgoCD Application (qdrant/qdrant Helm chart)
+│   │   └── overlays/
+│   │       ├── minipc/        # nodeSelector, ClusterIP only
+│   │       └── kind/          # (placeholder)
+│   └── ha-mcp/
+│       ├── base/              # ArgoCD Applications (namespace + RemoteMCPServer config)
+│       ├── overlays/
+│       │   └── minipc/
+│       │       ├── config/    # RemoteMCPServer → HA built-in /api/mcp endpoint
+│       │       ├── deploy/    # namespace only
+│       │       └── secrets/   # SOPS-encrypted ha-mcp-token (managed by Flux)
+│       └── flux/              # Flux GitRepository + Kustomization for secret decryption
 ├── argocd/
 │   └── app-of-apps-minipc.yaml    # minipc entry point
 ├── environments/
@@ -210,8 +224,9 @@ make test-agentgateway             # test LLM routing (set AGENTGATEWAY_HOST)
 |---|---|---|
 | agentgateway | v2.2.1 | OpenAI-compatible LLM gateway (Ollama + Gemini) |
 | kagent | 0.8.0-beta6 | Kubernetes AI agent |
-| Phoenix | chart 5.0.18 / app 13.18.2 | LLM observability & tracing (OpenTelemetry) |
+| Phoenix | HEAD (GitHub) | LLM observability & tracing (OpenTelemetry) |
 | Qdrant | 1.17.0 | Vector database |
+| Home Assistant MCP | built-in `/api/mcp` | Smart home control via MCP (20 tools) |
 
 ## Secrets
 
@@ -226,6 +241,11 @@ make minipc-secrets     # minipc
 make minipc-agentgateway-admin-secret  # needs AGENTGATEWAY_ADMIN_CLIENT_SECRET in .env
 make minipc-kagent-secret              # needs KAGENT_CLIENT_SECRET in .env
 make minipc-phoenix-secret             # needs PHOENIX_CLIENT_SECRET in .env
+
+# Home Assistant MCP token (minipc only, SOPS-encrypted, committed to git)
+# Requires: HA_TOKEN in .env, AWS credentials for KMS key
+make minipc-ha-mcp-secret              # encrypts token → apps/ha-mcp/overlays/minipc/secrets/secret.sops.yaml
+# Flux CD applies and decrypts this secret automatically via kube2iam-aws-credentials
 ```
 
 `.env` variables (see `.env.example`):
@@ -237,6 +257,7 @@ OLLAMA_PORT=11434
 AGENTGATEWAY_ADMIN_CLIENT_SECRET=...
 KAGENT_CLIENT_SECRET=...
 PHOENIX_CLIENT_SECRET=...
+HA_TOKEN=...        # Home Assistant long-lived access token
 ```
 
 ## Testing
@@ -269,6 +290,21 @@ curl http://localhost:6333/healthz
 # list collections
 curl http://localhost:6333/collections
 ```
+
+### Home Assistant MCP
+
+The HA MCP server runs built-in on Home Assistant at `/api/mcp` (Streamable HTTP, MCP 1.26.0).
+It is exposed to kagent via a `RemoteMCPServer` resource and added to `k8s-agent` tools.
+
+```bash
+# check discovered HA tools in kagent
+kubectl get remotemcpserver homeassistant -n kagent -o jsonpath='{.status.discoveredTools[*].name}' | tr ' ' '\n'
+
+# verify k8s-agent has homeassistant tools
+kubectl get agent k8s-agent -n kagent -o jsonpath='{.spec.declarative.tools[*].mcpServer.name}'
+```
+
+Tools available: `HassTurnOn`, `HassTurnOff`, `HassLightSet`, `GetLiveContext`, `GetDateTime` and 15 more.
 
 ### kagent A2A endpoint
 
