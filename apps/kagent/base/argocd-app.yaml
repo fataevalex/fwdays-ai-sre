@@ -45,6 +45,11 @@ spec:
             enabled: false
           cilium-debug-agent:
             enabled: false
+  ignoreDifferences:
+    - group: kagent.dev
+      kind: Agent
+      jsonPointers:
+        - /spec/declarative/tools
   destination:
     server: https://kubernetes.default.svc
     namespace: kagent

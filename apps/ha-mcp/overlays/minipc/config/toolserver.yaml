@@ -1,16 +1,15 @@
-apiVersion: kagent.dev/v1alpha1
-kind: ToolServer
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
 metadata:
   name: homeassistant
   namespace: kagent
 spec:
   description: "Home Assistant MCP server — controls smart home devices, lights, switches and automations"
-  config:
-    streamableHttp:
-      url: "http://192.168.0.108:8123/api/mcp"
-      headersFrom:
-        - name: Authorization
-          valueFrom:
-            type: Secret
-            valueRef: ha-mcp-token
-            key: authorization-header
+  protocol: STREAMABLE_HTTP
+  url: "http://192.168.0.108:8123/api/mcp"
+  headersFrom:
+    - name: Authorization
+      valueFrom:
+        type: Secret
+        name: ha-mcp-token
+        key: authorization-header
