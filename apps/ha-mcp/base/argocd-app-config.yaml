@@ -14,11 +14,6 @@ spec:
   destination:
     server: https://kubernetes.default.svc
     namespace: kagent
-  ignoreDifferences:
-    - group: kagent.dev
-      kind: Agent
-      jsonPointers:
-        - /spec/declarative/tools
   syncPolicy:
     automated:
       prune: true
