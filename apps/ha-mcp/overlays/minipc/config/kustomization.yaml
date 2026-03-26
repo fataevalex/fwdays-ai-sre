@@ -3,3 +3,4 @@ kind: Kustomization
 
 resources:
   - toolserver.yaml
+  - k8s-agent-patch.yaml

@@ -1,0 +1,10 @@
+apiVersion: kagent.dev/v1alpha1
+kind: Agent
+metadata:
+  name: k8s-agent
+  namespace: kagent
+spec:
+  tools:
+    - type: McpServer
+      mcpServer:
+        toolServer: homeassistant
