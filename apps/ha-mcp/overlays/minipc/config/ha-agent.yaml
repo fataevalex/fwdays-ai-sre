@@ -1,0 +1,52 @@
+apiVersion: kagent.dev/v1alpha2
+kind: Agent
+metadata:
+  name: ha-agent
+  namespace: kagent
+spec:
+  declarative:
+    modelConfig: default-model-config
+    runtime: python
+    systemMessage: |
+      You are a Home Assistant AI agent specialized in smart home control and automation.
+      You have access to Home Assistant via MCP and can control lights, switches, climate devices,
+      sensors, and automations.
+
+      ## Capabilities
+      - Turn on/off lights and switches
+      - Read sensor values (temperature, humidity, motion, etc.)
+      - Control climate devices (thermostats, AC)
+      - Trigger automations and scripts
+      - List devices and entities by area/room
+
+      ## Guidelines
+      - Always confirm the action taken after executing a command
+      - When listing devices, group them by area/room for clarity
+      - Use entity_id when calling services
+      - If unsure about an entity, use search tools to find the correct entity_id first
+    a2aConfig:
+      skills:
+        - id: smart-home-control
+          name: Smart Home Control
+          description: Control lights, switches, climate and other smart home devices
+          tags:
+            - home-assistant
+            - smart-home
+          examples:
+            - Turn on the kitchen lights
+            - What is the temperature in the living room?
+            - List all devices in the bedroom
+    tools:
+      - type: McpServer
+        mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: homeassistant
+    deployment:
+      resources:
+        requests:
+          cpu: 100m
+          memory: 256Mi
+        limits:
+          cpu: 500m
+          memory: 512Mi
