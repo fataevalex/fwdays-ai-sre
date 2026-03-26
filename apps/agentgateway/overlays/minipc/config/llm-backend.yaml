@@ -8,10 +8,10 @@ spec:
     groups:
       - providers:
           - name: ollama-primary
-            host: 192.168.0.152
+            host: ollama.ollama.svc.cluster.local
             port: 11434
             openai:
-              model: llama3.1:8b
+              model: qwen2.5:3b
       - providers:
           - name: gemini-fallback
             gemini:

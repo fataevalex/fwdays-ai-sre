@@ -8,3 +8,4 @@ resources:
   - ../../apps/phoenix/overlays/minipc
   - ../../apps/qdrant/overlays/minipc
   - ../../apps/ha-mcp/overlays/minipc
+  - ../../apps/ollama/overlays/minipc

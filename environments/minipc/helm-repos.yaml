@@ -38,3 +38,16 @@ stringData:
   type: helm
   name: qdrant-charts
   url: https://qdrant.github.io/qdrant-helm
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: repo-ollama-helm
+  namespace: argocd
+  labels:
+    argocd.argoproj.io/secret-type: repository
+type: Opaque
+stringData:
+  type: helm
+  name: ollama-charts
+  url: https://otwld.github.io/ollama-helm/

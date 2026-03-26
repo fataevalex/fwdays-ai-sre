@@ -1,0 +1,51 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ollama
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://otwld.github.io/ollama-helm/
+    chart: ollama
+    targetRevision: "1.53.0"
+    helm:
+      valuesObject:
+        replicaCount: 2
+        ollama:
+          models:
+            pull:
+              - qwen2.5:3b
+          gpu:
+            enabled: false
+        resources:
+          requests:
+            cpu: "4"
+            memory: "8Gi"
+          limits:
+            cpu: "10"
+            memory: "12Gi"
+        persistentVolume:
+          enabled: true
+          size: 20Gi
+        service:
+          type: ClusterIP
+          port: 11434
+        livenessProbe:
+          enabled: true
+          initialDelaySeconds: 120
+        readinessProbe:
+          enabled: true
+          initialDelaySeconds: 120
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ollama
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

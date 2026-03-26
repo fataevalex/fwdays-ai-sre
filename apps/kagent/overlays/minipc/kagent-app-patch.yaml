@@ -11,7 +11,7 @@ spec:
           default: openAI
           openAI:
             provider: OpenAI
-            model: "llama3.1:8b"
+            model: "qwen2.5:3b"
             apiKey: "dummy"
             config:
               baseUrl: "http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1"
