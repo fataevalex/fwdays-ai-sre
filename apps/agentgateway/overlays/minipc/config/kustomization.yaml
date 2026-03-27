@@ -9,5 +9,4 @@ resources:
   - admin-ingress.yaml
   - tracing-policy.yaml
   - tracing-reference-grant.yaml
-
-  - proxy-configmap-patch.yaml
+  - proxy-tracing-configmap.yaml
