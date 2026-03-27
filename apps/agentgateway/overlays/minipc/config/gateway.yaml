@@ -17,6 +17,21 @@ spec:
         spec:
           nodeSelector:
             node-pool: minipc
+          initContainers:
+            - name: config-init
+              image: alpine:latest
+              command:
+                - sh
+                - -c
+                - |
+                  cp /original-config/config.yaml /runtime-config/config.yaml
+                  printf '\ntracing:\n  endpoint: "http://phoenix-svc.phoenix.svc.cluster.local:4317"\n  protocol: grpc\n  random_sampling: true\n  path: "/v1/traces"\n' >> /runtime-config/config.yaml
+              volumeMounts:
+                - name: config-volume
+                  mountPath: /original-config
+                  readOnly: true
+                - name: runtime-config
+                  mountPath: /runtime-config
           containers:
             - name: admin-proxy
               image: nginx:alpine
@@ -26,10 +41,16 @@ spec:
                 - name: admin-proxy-conf
                   mountPath: /etc/nginx/nginx.conf
                   subPath: nginx.conf
+            - name: agentgateway
+              volumeMounts:
+                - name: runtime-config
+                  mountPath: /config
           volumes:
             - name: admin-proxy-conf
               configMap:
                 name: agentgateway-admin-proxy-conf
+            - name: runtime-config
+              emptyDir: {}
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: Gateway
