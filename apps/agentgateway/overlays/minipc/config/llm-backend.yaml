@@ -17,7 +17,7 @@ spec:
       - providers:
           - name: ollama-fallback
             host: 192.168.0.152
-            port: 11434
+            port: 8000
             openai:
               model: qwen2.5:latest
 ---
