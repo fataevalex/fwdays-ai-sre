@@ -1,0 +1,16 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: agentgateway-secrets
+  namespace: flux-system
+spec:
+  interval: 10m
+  sourceRef:
+    kind: GitRepository
+    name: fwdays-ai-sre
+  path: ./apps/agentgateway/overlays/minipc/secrets
+  prune: true
+  decryption:
+    provider: sops
+    secretRef:
+      name: kube2iam-aws-credentials
