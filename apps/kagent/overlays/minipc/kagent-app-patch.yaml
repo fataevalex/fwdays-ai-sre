@@ -7,6 +7,13 @@ spec:
   source:
     helm:
       valuesObject:
+        otel:
+          tracing:
+            enabled: true
+            exporter:
+              otlp:
+                endpoint: "http://phoenix-svc.phoenix.svc.cluster.local:4317"
+                protocol: "grpc"
         providers:
           default: openAI
           openAI:
