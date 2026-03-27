@@ -12,6 +12,7 @@ spec:
     tracing:
       protocol: GRPC
       randomSampling: "true"
+      clientSampling: "true"
       backendRef:
         name: phoenix-svc
         namespace: phoenix
