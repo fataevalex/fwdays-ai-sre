@@ -7,3 +7,4 @@ resources:
   - argocd-app-crds.yaml
   - argocd-app.yaml
   - argocd-app-config.yaml
+  - argocd-app-secrets.yaml

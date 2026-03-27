@@ -7,19 +7,19 @@ spec:
   ai:
     groups:
       - providers:
-          - name: ollama-primary
-            host: ollama.ollama.svc.cluster.local
+          - name: ollama-home-pc
+            host: 192.168.0.152
             port: 11434
             openai:
-              model: qwen2.5:3b
+              model: qwen2.5:latest
       - providers:
-          - name: gemini-fallback
-            gemini:
-              model: gemini-2.0-flash-lite
+          - name: openai-fallback
+            openai:
+              model: gpt-4o-mini
             policies:
               auth:
                 secretRef:
-                  name: google-secret
+                  name: openai-secret
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
