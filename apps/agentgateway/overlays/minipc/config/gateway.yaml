@@ -4,6 +4,13 @@ metadata:
   name: agentgateway-proxy-params
   namespace: agentgateway-system
 spec:
+  env:
+    - name: OTEL_EXPORTER_OTLP_ENDPOINT
+      value: "http://phoenix-svc.phoenix.svc.cluster.local:4317"
+    - name: OTEL_EXPORTER_OTLP_PROTOCOL
+      value: "grpc"
+    - name: OTEL_SERVICE_NAME
+      value: "agentgateway-proxy"
   deployment:
     spec:
       template:
