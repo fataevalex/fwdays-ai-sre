@@ -7,19 +7,19 @@ spec:
   ai:
     groups:
       - providers:
-          - name: ollama-home-pc
-            host: 192.168.0.152
-            port: 11434
-            openai:
-              model: qwen2.5:latest
-      - providers:
-          - name: openai-fallback
+          - name: openai-primary
             openai:
               model: gpt-4o-mini
             policies:
               auth:
                 secretRef:
                   name: openai-secret
+      - providers:
+          - name: ollama-fallback
+            host: 192.168.0.152
+            port: 11434
+            openai:
+              model: qwen2.5:latest
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute

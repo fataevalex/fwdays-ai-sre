@@ -11,7 +11,7 @@ spec:
           default: openAI
           openAI:
             provider: OpenAI
-            model: "qwen2.5:latest"
+            model: "gpt-4o-mini"
             apiKey: "dummy"
             config:
               baseUrl: "http://agentgateway-proxy.agentgateway-system.svc.cluster.local:8080/v1"
