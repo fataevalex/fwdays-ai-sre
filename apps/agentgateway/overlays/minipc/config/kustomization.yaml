@@ -7,3 +7,5 @@ resources:
   - admin-nginx-configmap.yaml
   - oauth2-proxy.yaml
   - admin-ingress.yaml
+  - tracing-policy.yaml
+  - tracing-reference-grant.yaml
