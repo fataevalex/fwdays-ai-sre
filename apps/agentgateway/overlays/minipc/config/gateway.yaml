@@ -24,7 +24,7 @@ spec:
                 - sh
                 - -c
                 - |
-                  printf 'config:\n  tracing:\n    endpoint: "http://phoenix-svc.phoenix.svc.cluster.local:4317"\n    protocol: grpc\n    random_sampling: true\n    path: "/v1/traces"\n' > /runtime-config/config.yaml
+                  printf 'config:\n  tracing:\n    otlpEndpoint: "http://phoenix-svc.phoenix.svc.cluster.local:4317"\n    otlpProtocol: grpc\n    randomSampling: true\n    path: "/v1/traces"\n' > /runtime-config/config.yaml
               volumeMounts:
                 - name: config-volume
                   mountPath: /original-config
