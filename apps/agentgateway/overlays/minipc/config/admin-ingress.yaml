@@ -24,7 +24,7 @@ spec:
   issuerRef:
     group: cert-manager.io
     kind: ClusterIssuer
-    name: selfsigned-issuer
+    name: cluster-ca-issuer
   secretName: agentgateway-local-tls
   usages:
     - digital signature
