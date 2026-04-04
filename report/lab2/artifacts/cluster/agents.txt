@@ -1,0 +1,4 @@
+NAME         TYPE          RUNTIME   READY   ACCEPTED
+echo-agent   Declarative   python    True    True
+ha-agent     Declarative   python    True    True
+k8s-agent    Declarative   python    True    True

@@ -1,0 +1,86 @@
+apiVersion: kagent.dev/v1alpha2
+kind: RemoteMCPServer
+metadata:
+  annotations:
+    argocd.argoproj.io/tracking-id: ha-mcp-config:kagent.dev/RemoteMCPServer:kagent/homeassistant
+    kubectl.kubernetes.io/last-applied-configuration: |
+      {"apiVersion":"kagent.dev/v1alpha2","kind":"RemoteMCPServer","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"ha-mcp-config:kagent.dev/RemoteMCPServer:kagent/homeassistant"},"name":"homeassistant","namespace":"kagent"},"spec":{"description":"Home Assistant MCP server — controls smart home devices, lights, switches and automations","headersFrom":[{"name":"Authorization","valueFrom":{"key":"authorization-header","name":"ha-mcp-token","type":"Secret"}}],"protocol":"STREAMABLE_HTTP","url":"http://192.168.0.108:8123/api/mcp"}}
+  creationTimestamp: "2026-03-26T00:24:48Z"
+  generation: 1
+  name: homeassistant
+  namespace: kagent
+  resourceVersion: "33372378"
+  uid: 30d49c85-e691-4c4a-8460-ea6dcf2129bd
+spec:
+  description: Home Assistant MCP server — controls smart home devices, lights, switches
+    and automations
+  headersFrom:
+  - name: Authorization
+    valueFrom:
+      key: authorization-header
+      name: ha-mcp-token
+      type: Secret
+  protocol: STREAMABLE_HTTP
+  terminateOnClose: true
+  url: http://192.168.0.108:8123/api/mcp
+status:
+  conditions:
+  - lastTransitionTime: "2026-04-03T23:08:54Z"
+    message: Remote MCP server configuration accepted
+    observedGeneration: 1
+    reason: Reconciled
+    status: "True"
+    type: Accepted
+  discoveredTools:
+  - description: Turns on/opens/presses a device or entity. For locks, this performs
+      a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or 'lock'.
+    name: HassTurnOn
+  - description: Turns off/closes a device or entity. For locks, this performs an
+      'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable',
+      or 'unlock'.
+    name: HassTurnOff
+  - description: Cancels all timers
+    name: HassCancelAllTimers
+  - description: Resumes a media player
+    name: HassMediaUnpause
+  - description: Pauses a media player
+    name: HassMediaPause
+  - description: Skips a media player to the next item
+    name: HassMediaNext
+  - description: Replays the previous item for a media player
+    name: HassMediaPrevious
+  - description: Sets the volume percentage of a media player
+    name: HassSetVolume
+  - description: Increases or decreases the volume of a media player
+    name: HassSetVolumeRelative
+  - description: Mutes a media player
+    name: HassMediaPlayerMute
+  - description: Unmutes a media player
+    name: HassMediaPlayerUnmute
+  - description: Searches for media and plays the first result
+    name: HassMediaSearchAndPlay
+  - description: Broadcast a message through the home
+    name: HassBroadcast
+  - description: Sets the target temperature of a climate device or entity
+    name: HassClimateSetTemperature
+  - description: Sets the brightness percentage or color of a light
+    name: HassLightSet
+  - description: Add item to a todo list
+    name: HassListAddItem
+  - description: Complete item on a todo list
+    name: HassListCompleteItem
+  - description: Remove one or more items from a todo list
+    name: HassListRemoveItem
+  - description: Provides the current date and time.
+    name: GetDateTime
+  - description: Query a to-do list to find out what items are on it. Use this to
+      answer questions like 'What's on my task list?' or 'Read my grocery list'. Filters
+      items by status (needs_action, completed, all).
+    name: todo_get_items
+  - description: 'Provides real-time information about the CURRENT state, value, or
+      mode of devices, sensors, entities, or areas. Use this tool for: 1. Answering
+      questions about current conditions (e.g., ''Is the light on?''). 2. As the first
+      step in conditional actions (e.g., ''If the weather is rainy, turn off sprinklers''
+      requires checking the weather first).'
+    name: GetLiveContext
+  observedGeneration: 1

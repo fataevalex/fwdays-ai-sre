@@ -1,0 +1,2 @@
+NAMESPACE             NAME   HOSTNAMES   AGE
+agentgateway-system   llm                19d

@@ -1,0 +1,2 @@
+NAME                   PROVIDER   MODEL
+default-model-config   OpenAI     gpt-4o-mini

@@ -1,0 +1,336 @@
+apiVersion: v1
+items:
+- apiVersion: kagent.dev/v1alpha2
+  kind: Agent
+  metadata:
+    creationTimestamp: "2026-03-16T18:12:02Z"
+    generation: 1
+    name: echo-agent
+    namespace: kagent
+    resourceVersion: "33298186"
+    uid: 8adbc8ad-2918-4aee-89ac-718efd268b72
+  spec:
+    declarative:
+      modelConfig: default-model-config
+      runtime: python
+      systemMessage: |-
+        You're a helpful agent, made by the kagent team.
+
+        # Instructions
+            - If user question is unclear, ask for clarification before running any tools
+            - Always be helpful and friendly
+            - If you don't know how to answer the question DO NOT make things up, tell the user "Sorry, I don't know how to answer that" and ask them to clarify the question further
+            - If you are unable to help, or something goes wrong, refer the user to https://kagent.dev for more information or support.
+
+        # Response format:
+            - ALWAYS format your response as Markdown
+            - Your response will include a summary of actions you took and an explanation of the result
+            - If you created any artifacts such as files or resources, you will include those in your response as well
+      tools:
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: MCPServer
+          name: mcp-echo-server
+          namespace: kagent
+          toolNames:
+          - echo
+        type: McpServer
+    description: echo agent
+    type: Declarative
+  status:
+    conditions:
+    - lastTransitionTime: "2026-03-16T18:09:32Z"
+      message: Agent configuration accepted
+      observedGeneration: 1
+      reason: Reconciled
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-04-03T18:15:38Z"
+      message: Deployment is ready
+      observedGeneration: 1
+      reason: DeploymentReady
+      status: "True"
+      type: Ready
+    observedGeneration: 1
+- apiVersion: kagent.dev/v1alpha2
+  kind: Agent
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: ha-mcp-config:kagent.dev/Agent:kagent/ha-agent
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"kagent.dev/v1alpha2","kind":"Agent","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"ha-mcp-config:kagent.dev/Agent:kagent/ha-agent"},"name":"ha-agent","namespace":"kagent"},"spec":{"declarative":{"a2aConfig":{"skills":[{"description":"Control lights, switches, climate and other smart home devices","examples":["Turn on the kitchen lights","What is the temperature in the living room?","List all devices in the bedroom"],"id":"smart-home-control","name":"Smart Home Control","tags":["home-assistant","smart-home"]}]},"deployment":{"resources":{"limits":{"cpu":"500m","memory":"512Mi"},"requests":{"cpu":"100m","memory":"256Mi"}}},"modelConfig":"default-model-config","runtime":"python","systemMessage":"You are a Home Assistant AI agent specialized in smart home control and automation.\nYou have access to Home Assistant via MCP and can control lights, switches, climate devices,\nsensors, and automations.\n\n## Capabilities\n- Turn on/off lights and switches\n- Read sensor values (temperature, humidity, motion, etc.)\n- Control climate devices (thermostats, AC)\n- Trigger automations and scripts\n- List devices and entities by area/room\n\n## Guidelines\n- Always confirm the action taken after executing a command\n- When listing devices, group them by area/room for clarity\n- Use entity_id when calling services\n- If unsure about an entity, use search tools to find the correct entity_id first\n","tools":[{"mcpServer":{"apiGroup":"kagent.dev","kind":"RemoteMCPServer","name":"homeassistant","toolNames":["HassTurnOn","HassTurnOff","HassCancelAllTimers","HassClimateSetTemperature","HassLightSet","HassListAddItem","HassListCompleteItem","HassListRemoveItem","HassMediaUnpause","HassMediaPause","HassMediaNext","HassMediaPrevious","HassSetVolume","HassSetVolumeRelative","HassMediaPlayerMute","HassMediaPlayerUnmute","HassMediaSearchAndPlay","GetDateTime","todo_get_items","GetLiveContext"]},"type":"McpServer"}]}}}
+    creationTimestamp: "2026-03-26T23:38:06Z"
+    generation: 2
+    name: ha-agent
+    namespace: kagent
+    resourceVersion: "33298357"
+    uid: 9541c275-eff7-4f7e-8bd8-0d1c0546207d
+  spec:
+    declarative:
+      a2aConfig:
+        skills:
+        - description: Control lights, switches, climate and other smart home devices
+          examples:
+          - Turn on the kitchen lights
+          - What is the temperature in the living room?
+          - List all devices in the bedroom
+          id: smart-home-control
+          name: Smart Home Control
+          tags:
+          - home-assistant
+          - smart-home
+      deployment:
+        resources:
+          limits:
+            cpu: 500m
+            memory: 512Mi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+      modelConfig: default-model-config
+      runtime: python
+      systemMessage: |
+        You are a Home Assistant AI agent specialized in smart home control and automation.
+        You have access to Home Assistant via MCP and can control lights, switches, climate devices,
+        sensors, and automations.
+
+        ## Capabilities
+        - Turn on/off lights and switches
+        - Read sensor values (temperature, humidity, motion, etc.)
+        - Control climate devices (thermostats, AC)
+        - Trigger automations and scripts
+        - List devices and entities by area/room
+
+        ## Guidelines
+        - Always confirm the action taken after executing a command
+        - When listing devices, group them by area/room for clarity
+        - Use entity_id when calling services
+        - If unsure about an entity, use search tools to find the correct entity_id first
+      tools:
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: homeassistant
+          toolNames:
+          - HassTurnOn
+          - HassTurnOff
+          - HassCancelAllTimers
+          - HassClimateSetTemperature
+          - HassLightSet
+          - HassListAddItem
+          - HassListCompleteItem
+          - HassListRemoveItem
+          - HassMediaUnpause
+          - HassMediaPause
+          - HassMediaNext
+          - HassMediaPrevious
+          - HassSetVolume
+          - HassSetVolumeRelative
+          - HassMediaPlayerMute
+          - HassMediaPlayerUnmute
+          - HassMediaSearchAndPlay
+          - GetDateTime
+          - todo_get_items
+          - GetLiveContext
+        type: McpServer
+    type: Declarative
+  status:
+    conditions:
+    - lastTransitionTime: "2026-03-26T23:38:28Z"
+      message: Agent configuration accepted
+      observedGeneration: 2
+      reason: Reconciled
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-04-03T18:15:47Z"
+      message: Deployment is ready
+      observedGeneration: 2
+      reason: DeploymentReady
+      status: "True"
+      type: Ready
+    observedGeneration: 2
+- apiVersion: kagent.dev/v1alpha2
+  kind: Agent
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: kagent:kagent.dev/Agent:kagent/k8s-agent
+    creationTimestamp: "2026-03-15T21:13:38Z"
+    generation: 7
+    labels:
+      app.kubernetes.io/instance: kagent
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: k8s-agent
+      app.kubernetes.io/part-of: kagent
+      app.kubernetes.io/version: 0.8.0-beta6
+      helm.sh/chart: k8s-agent-0.8.0-beta6
+    name: k8s-agent
+    namespace: kagent
+    resourceVersion: "33298234"
+    uid: 0ce00bbe-2931-4602-acfc-d4f82c7753c6
+  spec:
+    declarative:
+      a2aConfig:
+        skills:
+        - description: The ability to analyze and diagnose Kubernetes Cluster issues.
+          examples:
+          - What is the status of my cluster?
+          - How can I troubleshoot a failing pod?
+          - What are the resource limits for my nodes?
+          id: cluster-diagnostics
+          name: Cluster Diagnostics
+          tags:
+          - cluster
+          - diagnostics
+        - description: The ability to manage and optimize Kubernetes resources.
+          examples:
+          - Scale my deployment X to 3 replicas.
+          - Optimize resource requests for my pods.
+          - Reserve more CPU for my nodes.
+          id: resource-management
+          name: Resource Management
+          tags:
+          - resource
+          - management
+        - description: The ability to audit and enhance Kubernetes security.
+          examples:
+          - Check for RBAC misconfigurations.
+          - Audit my network policies.
+          - Identify potential security vulnerabilities in my cluster.
+          id: security-audit
+          name: Security Audit
+          tags:
+          - security
+          - audit
+      deployment:
+        resources:
+          limits:
+            cpu: 1000m
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 256Mi
+      modelConfig: default-model-config
+      promptTemplate:
+        dataSources:
+        - alias: builtin
+          kind: ConfigMap
+          name: kagent-builtin-prompts
+      runtime: python
+      systemMessage: |
+        # Kubernetes AI Agent System Prompt
+
+        You are KubeAssist, an advanced AI agent specialized in Kubernetes troubleshooting and operations. You have deep expertise in Kubernetes architecture, container orchestration, networking, storage systems, and resource management. Your purpose is to help users diagnose and resolve Kubernetes-related issues while following best practices and security protocols.
+
+        ## Core Capabilities
+
+        - **Expert Kubernetes Knowledge**: You understand Kubernetes components, architecture, orchestration principles, and resource management.
+        - **Systematic Troubleshooting**: You follow a methodical approach to problem diagnosis, analyzing logs, metrics, and cluster state.
+        - **Security-First Mindset**: You prioritize security awareness including RBAC, Pod Security Policies, and secure practices.
+        - **Clear Communication**: You provide clear, concise technical information and explain complex concepts appropriately.
+        - **Safety-Oriented**: You follow the principle of least privilege and avoid destructive operations without confirmation.
+
+        ## Operational Guidelines
+
+        {{include "builtin/kubernetes-context"}}
+
+        ## Available Tools
+
+        You have access to the following tools to help diagnose and solve Kubernetes issues:
+
+        ### Informational Tools
+        - `GetResources`: Retrieve information about Kubernetes resources. Always prefer "wide" output unless specified otherwise. Specify the exact resource type.
+        - `DescribeResource`: Get detailed information about a specific Kubernetes resource.
+        - `GetEvents`: View events in the Kubernetes cluster to identify recent issues.
+        - `GetPodLogs`: Retrieve logs from specific pods for troubleshooting.
+        - `GetResourceYAML`: Obtain the YAML representation of a Kubernetes resource.
+        - `GetAvailableAPIResources`: View supported API resources in the cluster.
+        - `GetClusterConfiguration`: Retrieve the Kubernetes cluster configuration.
+        - `CheckServiceConnectivity`: Verify connectivity to a service.
+        - `ExecuteCommand`: Run a command inside a pod (use cautiously).
+
+        ### Modification Tools
+        - `CreateResource`: Create a new resource from a local file.
+        - `CreateResourceFromUrl`: Create a resource from a URL.
+        - `ApplyManifest`: Apply a YAML resource file to the cluster.
+        - `PatchResource`: Make partial updates to a resource.
+        - `DeleteResource`: Remove a resource from the cluster (use with caution).
+        - `LabelResource`: Add labels to resources.
+        - `RemoveLabel`: Remove labels from resources.
+        - `AnnotateResource`: Add annotations to resources.
+        - `RemoveAnnotation`: Remove annotations from resources.
+        - `GenerateResourceTool`: Generate YAML configurations for Istio, Gateway API, or Argo resources.
+
+        ## Tool Usage Best Practices
+
+        {{include "builtin/tool-usage-best-practices"}}
+
+        ## Safety Protocols
+
+        {{include "builtin/safety-guardrails"}}
+
+        ## Response Format
+
+        When responding to user queries:
+
+        1. **Initial Assessment**: Briefly acknowledge the issue and establish what you understand about the situation.
+        2. **Information Gathering**: If needed, state what additional information you require.
+        3. **Analysis**: Provide your analysis of the situation in clear, technical terms.
+        4. **Recommendations**: Offer specific recommendations and the tools you'll use.
+        5. **Action Plan**: Present a step-by-step plan for resolution.
+        6. **Verification**: Explain how to verify the solution worked correctly.
+        7. **Knowledge Sharing**: Include brief explanations of relevant Kubernetes concepts.
+
+        ## Limitations
+
+        1. You cannot directly connect to or diagnose external systems outside of the Kubernetes cluster.
+        2. You must rely on the tools provided and cannot use kubectl commands directly.
+        3. You cannot access or modify files on the host system outside of the agent's environment.
+        4. Remember that your suggestions impact production environments - prioritize safety and stability.
+
+        Always start with the least intrusive approach, and escalate diagnostics only as needed. When in doubt, gather more information before recommending changes.
+      tools:
+      - mcpServer:
+          apiGroup: kagent.dev
+          kind: RemoteMCPServer
+          name: kagent-tool-server
+          toolNames:
+          - k8s_check_service_connectivity
+          - k8s_patch_resource
+          - k8s_remove_annotation
+          - k8s_annotate_resource
+          - k8s_remove_label
+          - k8s_label_resource
+          - k8s_create_resource
+          - k8s_create_resource_from_url
+          - k8s_get_events
+          - k8s_get_available_api_resources
+          - k8s_get_cluster_configuration
+          - k8s_describe_resource
+          - k8s_delete_resource
+          - k8s_get_resource_yaml
+          - k8s_execute_command
+          - k8s_apply_manifest
+          - k8s_get_resources
+          - k8s_get_pod_logs
+        type: McpServer
+    description: An Kubernetes Expert AI Agent specializing in cluster operations,
+      troubleshooting, and maintenance.
+    type: Declarative
+  status:
+    conditions:
+    - lastTransitionTime: "2026-03-26T00:18:31Z"
+      message: Agent configuration accepted
+      observedGeneration: 7
+      reason: Reconciled
+      status: "True"
+      type: Accepted
+    - lastTransitionTime: "2026-04-03T18:15:39Z"
+      message: Deployment is ready
+      observedGeneration: 7
+      reason: DeploymentReady
+      status: "True"
+      type: Ready
+    observedGeneration: 7
+kind: List
+metadata:
+  resourceVersion: ""

@@ -1,0 +1,96 @@
+Name:         ha-agent
+Namespace:    kagent
+Labels:       <none>
+Annotations:  argocd.argoproj.io/tracking-id: ha-mcp-config:kagent.dev/Agent:kagent/ha-agent
+API Version:  kagent.dev/v1alpha2
+Kind:         Agent
+Metadata:
+  Creation Timestamp:  2026-03-26T23:38:06Z
+  Generation:          2
+  Resource Version:    33298357
+  UID:                 9541c275-eff7-4f7e-8bd8-0d1c0546207d
+Spec:
+  Declarative:
+    a2aConfig:
+      Skills:
+        Description:  Control lights, switches, climate and other smart home devices
+        Examples:
+          Turn on the kitchen lights
+          What is the temperature in the living room?
+          List all devices in the bedroom
+        Id:    smart-home-control
+        Name:  Smart Home Control
+        Tags:
+          home-assistant
+          smart-home
+    Deployment:
+      Resources:
+        Limits:
+          Cpu:     500m
+          Memory:  512Mi
+        Requests:
+          Cpu:       100m
+          Memory:    256Mi
+    Model Config:    default-model-config
+    Runtime:         python
+    System Message:  You are a Home Assistant AI agent specialized in smart home control and automation.
+You have access to Home Assistant via MCP and can control lights, switches, climate devices,
+sensors, and automations.
+
+## Capabilities
+- Turn on/off lights and switches
+- Read sensor values (temperature, humidity, motion, etc.)
+- Control climate devices (thermostats, AC)
+- Trigger automations and scripts
+- List devices and entities by area/room
+
+## Guidelines
+- Always confirm the action taken after executing a command
+- When listing devices, group them by area/room for clarity
+- Use entity_id when calling services
+- If unsure about an entity, use search tools to find the correct entity_id first
+
+    Tools:
+      Mcp Server:
+        API Group:  kagent.dev
+        Kind:       RemoteMCPServer
+        Name:       homeassistant
+        Tool Names:
+          HassTurnOn
+          HassTurnOff
+          HassCancelAllTimers
+          HassClimateSetTemperature
+          HassLightSet
+          HassListAddItem
+          HassListCompleteItem
+          HassListRemoveItem
+          HassMediaUnpause
+          HassMediaPause
+          HassMediaNext
+          HassMediaPrevious
+          HassSetVolume
+          HassSetVolumeRelative
+          HassMediaPlayerMute
+          HassMediaPlayerUnmute
+          HassMediaSearchAndPlay
+          GetDateTime
+          todo_get_items
+          GetLiveContext
+      Type:  McpServer
+  Type:      Declarative
+Status:
+  Conditions:
+    Last Transition Time:  2026-03-26T23:38:28Z
+    Message:               Agent configuration accepted
+    Observed Generation:   2
+    Reason:                Reconciled
+    Status:                True
+    Type:                  Accepted
+    Last Transition Time:  2026-04-03T18:15:47Z
+    Message:               Deployment is ready
+    Observed Generation:   2
+    Reason:                DeploymentReady
+    Status:                True
+    Type:                  Ready
+  Observed Generation:     2
+Events:                    <none>

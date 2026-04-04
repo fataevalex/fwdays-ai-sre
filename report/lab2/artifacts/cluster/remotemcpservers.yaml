@@ -1,0 +1,699 @@
+apiVersion: v1
+items:
+- apiVersion: kagent.dev/v1alpha2
+  kind: RemoteMCPServer
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: ha-mcp-config:kagent.dev/RemoteMCPServer:kagent/homeassistant
+      kubectl.kubernetes.io/last-applied-configuration: |
+        {"apiVersion":"kagent.dev/v1alpha2","kind":"RemoteMCPServer","metadata":{"annotations":{"argocd.argoproj.io/tracking-id":"ha-mcp-config:kagent.dev/RemoteMCPServer:kagent/homeassistant"},"name":"homeassistant","namespace":"kagent"},"spec":{"description":"Home Assistant MCP server — controls smart home devices, lights, switches and automations","headersFrom":[{"name":"Authorization","valueFrom":{"key":"authorization-header","name":"ha-mcp-token","type":"Secret"}}],"protocol":"STREAMABLE_HTTP","url":"http://192.168.0.108:8123/api/mcp"}}
+    creationTimestamp: "2026-03-26T00:24:48Z"
+    generation: 1
+    name: homeassistant
+    namespace: kagent
+    resourceVersion: "33372378"
+    uid: 30d49c85-e691-4c4a-8460-ea6dcf2129bd
+  spec:
+    description: Home Assistant MCP server — controls smart home devices, lights,
+      switches and automations
+    headersFrom:
+    - name: Authorization
+      valueFrom:
+        key: authorization-header
+        name: ha-mcp-token
+        type: Secret
+    protocol: STREAMABLE_HTTP
+    terminateOnClose: true
+    url: http://192.168.0.108:8123/api/mcp
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-03T23:08:54Z"
+      message: Remote MCP server configuration accepted
+      observedGeneration: 1
+      reason: Reconciled
+      status: "True"
+      type: Accepted
+    discoveredTools:
+    - description: Turns on/opens/presses a device or entity. For locks, this performs
+        a 'lock' action. Use for requests like 'turn on', 'activate', 'enable', or
+        'lock'.
+      name: HassTurnOn
+    - description: Turns off/closes a device or entity. For locks, this performs an
+        'unlock' action. Use for requests like 'turn off', 'deactivate', 'disable',
+        or 'unlock'.
+      name: HassTurnOff
+    - description: Cancels all timers
+      name: HassCancelAllTimers
+    - description: Resumes a media player
+      name: HassMediaUnpause
+    - description: Pauses a media player
+      name: HassMediaPause
+    - description: Skips a media player to the next item
+      name: HassMediaNext
+    - description: Replays the previous item for a media player
+      name: HassMediaPrevious
+    - description: Sets the volume percentage of a media player
+      name: HassSetVolume
+    - description: Increases or decreases the volume of a media player
+      name: HassSetVolumeRelative
+    - description: Mutes a media player
+      name: HassMediaPlayerMute
+    - description: Unmutes a media player
+      name: HassMediaPlayerUnmute
+    - description: Searches for media and plays the first result
+      name: HassMediaSearchAndPlay
+    - description: Broadcast a message through the home
+      name: HassBroadcast
+    - description: Sets the target temperature of a climate device or entity
+      name: HassClimateSetTemperature
+    - description: Sets the brightness percentage or color of a light
+      name: HassLightSet
+    - description: Add item to a todo list
+      name: HassListAddItem
+    - description: Complete item on a todo list
+      name: HassListCompleteItem
+    - description: Remove one or more items from a todo list
+      name: HassListRemoveItem
+    - description: Provides the current date and time.
+      name: GetDateTime
+    - description: Query a to-do list to find out what items are on it. Use this to
+        answer questions like 'What's on my task list?' or 'Read my grocery list'.
+        Filters items by status (needs_action, completed, all).
+      name: todo_get_items
+    - description: 'Provides real-time information about the CURRENT state, value,
+        or mode of devices, sensors, entities, or areas. Use this tool for: 1. Answering
+        questions about current conditions (e.g., ''Is the light on?''). 2. As the
+        first step in conditional actions (e.g., ''If the weather is rainy, turn off
+        sprinklers'' requires checking the weather first).'
+      name: GetLiveContext
+    observedGeneration: 1
+- apiVersion: kagent.dev/v1alpha2
+  kind: RemoteMCPServer
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: kagent:kagent.dev/RemoteMCPServer:kagent/kagent-grafana-mcp
+    creationTimestamp: "2026-03-15T21:13:38Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/instance: kagent
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: grafana-mcp
+      helm.sh/chart: grafana-mcp-0.8.0-beta6
+    name: kagent-grafana-mcp
+    namespace: kagent
+    resourceVersion: "33297651"
+    uid: c63b352a-c37a-4fd9-b185-a09f0df4b22a
+  spec:
+    description: Grafana MCP server
+    protocol: STREAMABLE_HTTP
+    sseReadTimeout: 5m0s
+    terminateOnClose: true
+    timeout: 30s
+    url: http://kagent-grafana-mcp.kagent:8000/mcp
+  status:
+    conditions:
+    - lastTransitionTime: "2026-03-26T10:48:45Z"
+      message: Remote MCP server configuration accepted
+      observedGeneration: 1
+      reason: Reconciled
+      status: "True"
+      type: Accepted
+    discoveredTools:
+    - description: Add a note (userNote activity) to an existing incident's timeline
+        using its ID. The note body can include URLs which will be attached as context.
+        Use this to add context to an incident.
+      name: add_activity_to_incident
+    - description: |-
+        Manage Grafana alerting routing configuration, including notification policies, contact points and time intervals.
+
+        Notification policies define how alerts are grouped, routed, and which contact points receive them.
+        Time intervals define active/mute periods for alert notifications.
+
+        When to use:
+        - Understanding how alerts are routed to contact points/receivers
+        - Debugging why an alert went to a specific receiver
+        - Checking grouping, timing, or mute interval settings
+
+        When NOT to use:
+        - Checking alert rule configuration or state (use alerting_manage_rules)
+      name: alerting_manage_routing
+    - description: |-
+        Manage Grafana alert rules with full CRUD capabilities and filtering.
+
+        When to use:
+        - Understanding why an alert is or isn't firing
+        - Auditing alert rule configuration (queries, conditions, labels, notification settings)
+        - Finding alert rules by state, folder, group, or name
+        - Creating, updating, or deleting alert rules
+        - Comparing rule versions to see what changed
+
+        When NOT to use:
+        - Checking how alerts are routed to receivers (use alerting_manage_routing)
+      name: alerting_manage_rules
+    - description: Create a new annotation on a dashboard or panel. Set format to
+        'graphite' and provide 'what' for Graphite-format annotations.
+      name: create_annotation
+    - description: Create a Grafana folder. Provide a title and optional UID. Returns
+        the created folder.
+      name: create_folder
+    - description: Create a new Grafana incident. Requires title, severity, and room
+        prefix. Allows setting status and labels. This tool should be used judiciously
+        and sparingly, and only after confirmation from the user, as it may notify
+        or alarm lots of people.
+      name: create_incident
+    - description: Searches Loki logs for elevated error patterns compared to the
+        last day's average, waits for the analysis to complete, and returns the results
+        including any patterns found.
+      name: find_error_pattern_logs
+    - description: Searches relevant Tempo datasources for slow requests, waits for
+        the analysis to complete, and returns the results.
+      name: find_slow_requests
+    - description: Generate deeplink URLs for Grafana resources. Supports dashboards
+        (requires dashboardUid), panels (requires dashboardUid and panelId), and Explore
+        queries (requires datasourceUid and optionally queries). For explore links,
+        the time range and queries are embedded inside the Grafana explore state.
+      name: generate_deeplink
+    - description: Get a specific alert group from Grafana OnCall by its ID. Returns
+        the full alert group details.
+      name: get_alert_group
+    - description: Returns annotation tags with optional filtering by tag name. Only
+        the provided filters are applied.
+      name: get_annotation_tags
+    - description: Fetch Grafana annotations using filters such as dashboard UID,
+        time range and tags.
+      name: get_annotations
+    - description: Get assertion summary for a given entity with its type, name, env,
+        site, namespace, and a time range
+      name: get_assertions
+    - description: Get the list of users currently on-call for a specific Grafana
+        OnCall schedule ID. Returns the schedule ID, name, and a list of detailed
+        user objects for those currently on call.
+      name: get_current_oncall_users
+    - description: 'Retrieves the complete dashboard, including panels, variables,
+        and settings, for a specific dashboard identified by its UID. WARNING: Large
+        dashboards can consume significant context window space. Consider using get_dashboard_summary
+        for overview or get_dashboard_property for specific data instead.'
+      name: get_dashboard_by_uid
+    - description: 'Retrieve panel queries from a Grafana dashboard. Supports all
+        datasource types (Prometheus, Loki, CloudWatch, SQL, etc.) and row-nested
+        panels. Optionally filter to a specific panel by ID with `panelId`. Optionally
+        provide `variables` for template variable substitution, which populates `processedQuery`
+        and `requiredVariables` fields. Returns an array of objects with fields: title,
+        query (raw expression), datasource (object with uid and type), and optionally
+        processedQuery, refId, and requiredVariables.'
+      name: get_dashboard_panel_queries
+    - description: 'Get specific parts of a dashboard using JSONPath expressions to
+        minimize context window usage. Common paths: ''$.title'' (title)\, ''$.panels[*].title''
+        (all panel titles)\, ''$.panels[0]'' (first panel)\, ''$.templating.list''
+        (variables)\, ''$.tags'' (tags)\, ''$.panels[*].targets[*].expr'' (all queries).
+        Use this instead of get_dashboard_by_uid when you only need specific dashboard
+        properties.'
+      name: get_dashboard_property
+    - description: Get a compact summary of a dashboard including title\, panel count\,
+        panel types\, variables\, and other metadata without the full JSON. Use this
+        for dashboard overview and planning modifications without consuming large
+        context windows.
+      name: get_dashboard_summary
+    - description: Retrieves detailed information about a specific datasource by UID
+        or name. Returns the full datasource model, including name, type, URL, access
+        settings, JSON data, and secure JSON field status. Provide either uid or name;
+        uid takes priority if both are given.
+      name: get_datasource
+    - description: Get a single incident by ID. Returns the full incident details
+        including title, status, severity, labels, timestamps, and other metadata.
+      name: get_incident
+    - description: Get detailed information for a specific Grafana OnCall shift using
+        its ID. A shift represents a designated time period within a schedule when
+        users are actively on-call. Returns the full shift details.
+      name: get_oncall_shift
+    - description: Render a Grafana dashboard panel or full dashboard as a PNG image.
+        Returns the image as base64 encoded data. Requires the Grafana Image Renderer
+        service to be installed. Use this for generating visual snapshots of dashboards
+        for reports\, alerts\, or presentations.
+      name: get_panel_image
+    - description: Retrieves a specific analysis from an investigation by its UUID.
+        The investigation ID and analysis ID should be provided as strings in UUID
+        format.
+      name: get_sift_analysis
+    - description: Retrieves an existing Sift investigation by its UUID. The ID should
+        be provided as a string in UUID format (e.g. '02adab7c-bf5b-45f2-9459-d71a2c29e11b').
+      name: get_sift_investigation
+    - description: List alert groups from Grafana OnCall with filtering options. Supports
+        filtering by alert group ID, route ID, integration ID, state (new, acknowledged,
+        resolved, silenced), team ID, time range, labels, and name. For time ranges,
+        use format '{start}_{end}' ISO 8601 timestamp range (e.g., '2025-01-19T00:00:00_2025-01-19T23:59:59'
+        for a specific day). For labels, use format 'key:value' (e.g., ['env:prod',
+        'severity:high']). Returns a list of alert group objects with their details.
+        Supports pagination.
+      name: list_alert_groups
+    - description: List all configured datasources in Grafana. Use this to discover
+        available datasources and their UIDs. Supports filtering by type and pagination.
+      name: list_datasources
+    - description: List Grafana incidents. Allows filtering by status ('active', 'resolved')
+        and optionally including drill incidents. Returns a preview list with basic
+        details.
+      name: list_incidents
+    - description: Lists all available label names (keys) found in logs within a specified
+        Loki datasource and time range. Returns a list of unique label strings (e.g.,
+        `["app", "env", "pod"]`). If the time range is not provided, it defaults to
+        the last hour.
+      name: list_loki_label_names
+    - description: Retrieves all unique values associated with a specific `labelName`
+        within a Loki datasource and time range. Returns a list of string values (e.g.,
+        for `labelName="env"`, might return `["prod", "staging", "dev"]`). Useful
+        for discovering filter options. Defaults to the last hour if the time range
+        is omitted.
+      name: list_loki_label_values
+    - description: List Grafana OnCall schedules, optionally filtering by team ID.
+        If a specific schedule ID is provided, retrieves details for only that schedule.
+        Returns a list of schedule summaries including ID, name, team ID, timezone,
+        and shift IDs. Supports pagination.
+      name: list_oncall_schedules
+    - description: List teams configured in Grafana OnCall. Returns a list of team
+        objects with their details. Supports pagination.
+      name: list_oncall_teams
+    - description: List users from Grafana OnCall. These are OnCall users (separate
+        from Grafana users). Can retrieve all users in the OnCall directory, a specific
+        user by ID, or filter by username. Returns a list of user objects with their
+        details. Supports pagination.
+      name: list_oncall_users
+    - description: List label names in a PromQL-compatible datasource (Prometheus,
+        Thanos, Mimir, Cloud Monitoring, etc.). Allows filtering by series selectors
+        and time range.
+      name: list_prometheus_label_names
+    - description: Use after list_prometheus_metric_names to find label values for
+        filtering queries. Gets the values for a specific label name in a PromQL-compatible
+        datasource (Prometheus, Thanos, Mimir, Cloud Monitoring, etc.). Allows filtering
+        by series selectors and time range.
+      name: list_prometheus_label_values
+    - description: 'List Prometheus metric metadata. Returns metadata about metrics
+        currently scraped from targets. Note: This endpoint is experimental.'
+      name: list_prometheus_metric_metadata
+    - description: 'DISCOVERY: Call this first to find available metrics before querying.
+        Lists metric names in a PromQL-compatible datasource (Prometheus, Thanos,
+        Mimir, Cloud Monitoring, etc.). Retrieves all metric names and filters them
+        using the provided regex. Supports pagination.'
+      name: list_prometheus_metric_names
+    - description: |2
+
+        Lists all available label names (keys) found in profiles within a specified Pyroscope datasource, time range, and
+        optional label matchers. Label matchers are typically used to qualify a service name ({service_name="foo"}). Returns a
+        list of unique label strings (e.g., ["app", "env", "pod"]). Label names with double underscores (e.g. __name__) are
+        internal and rarely useful to users. If the time range is not provided, it defaults to the last hour.
+      name: list_pyroscope_label_names
+    - description: |2
+
+        Lists all available label values for a particular label name found in profiles within a specified Pyroscope datasource,
+        time range, and optional label matchers. Label matchers are typically used to qualify a service name ({service_name="foo"}).
+        Returns a list of unique label strings (e.g. for label name "env": ["dev", "staging", "prod"]). If the time range
+        is not provided, it defaults to the last hour.
+      name: list_pyroscope_label_values
+    - description: |2
+
+        Lists all available profile types available in a specified Pyroscope datasource and time range. Returns a list of all
+        available profile types (example profile type: "process_cpu:cpu:nanoseconds:cpu:nanoseconds"). A profile type has the
+        following structure: <name>:<sample type>:<sample unit>:<period type>:<period unit>. Not all profile types are available
+        for every service. If the time range is not provided, it defaults to the last hour.
+      name: list_pyroscope_profile_types
+    - description: Retrieves a list of Sift investigations with an optional limit.
+        If no limit is specified, defaults to 10 investigations.
+      name: list_sift_investigations
+    - description: Executes a LogQL query against a Loki datasource to retrieve log
+        entries or metric values. Returns a list of results, each containing a timestamp,
+        labels, and either a log line (`line`) or a numeric metric value (`value`).
+        Defaults to the last hour, a limit of 10 entries, and 'backward' direction
+        (newest first). Supports full LogQL syntax for log and metric queries (e.g.,
+        `{app="foo"} |= "error"`, `rate({app="bar"}[1m])`). Prefer using `query_loki_stats`
+        first to check stream size and `list_loki_label_names` and `list_loki_label_values`
+        to verify labels exist.
+      name: query_loki_logs
+    - description: Retrieves detected log patterns from a Loki datasource for a given
+        stream selector and time range. Returns a list of patterns, each containing
+        a pattern string and a total count of occurrences. Patterns help identify
+        common log structures and anomalies. The `logql` parameter must be a stream
+        selector (e.g., `{job="nginx"}`) and does not support line filters or aggregations.
+        Defaults to the last hour if the time range is omitted.
+      name: query_loki_patterns
+    - description: 'Retrieves statistics about log streams matching a given LogQL
+        *selector* within a Loki datasource and time range. Returns an object containing
+        the count of streams, chunks, entries, and total bytes (e.g., `{"streams":
+        5, "chunks": 50, "entries": 10000, "bytes": 512000}`). The `logql` parameter
+        **must** be a simple label selector (e.g., `{app="nginx", env="prod"}`) and
+        does not support line filters, parsers, or aggregations. Defaults to the last
+        hour if the time range is omitted.'
+      name: query_loki_stats
+    - description: 'WORKFLOW: list_prometheus_metric_names -> list_prometheus_label_values
+        -> query_prometheus. Query a PromQL-compatible datasource (Prometheus, Thanos,
+        Mimir, Cloud Monitoring, etc.) using a PromQL expression. Supports instant
+        queries (single point) and range queries (time range). Time: RFC3339 or relative
+        expressions like ''now''\, ''now-1h''.'
+      name: query_prometheus
+    - description: |-
+        Query Prometheus histogram percentiles. DISCOVER FIRST: Use list_prometheus_metric_names with regex='.*_bucket$' to find histograms.
+
+        Generates histogram_quantile PromQL. Example: metric='http_duration', percentile=95, labels='job="api"'
+
+        Time formats: 'now-1h', '2026-02-02T19:00:00Z', '1738519200000' (Unix ms)
+      name: query_prometheus_histogram
+    - description: |2
+
+        Unified Pyroscope query tool for fetching profiles or metrics from Pyroscope. Profile data shows WHICH functions consume resources; metrics data
+        shows WHEN consumption spiked. Use query_type="both" for complete analysis in one call.
+
+        query_type options (extends Grafana's PyroscopeQueryType):
+        - "profile": returns DOT-format call graph
+        - "metrics": returns time-series data points
+        - "both" (default): returns both profile and metrics in one response
+      name: query_pyroscope
+    - description: Search for Grafana dashboards by a query string. Returns a list
+        of matching dashboards with details like title, UID, folder, tags, and URL.
+      name: search_dashboards
+    - description: Search for Grafana folders by a query string. Returns matching
+        folders with details like title, UID, and URL.
+      name: search_folders
+    - description: Updates the provided properties of an annotation by ID. Only fields
+        included in the request are modified; omitted fields are left unchanged.
+      name: update_annotation
+    - description: 'Create or update a dashboard. Two modes: (1) Full JSON — provide
+        ''dashboard'' for new dashboards or complete replacements. (2) Patch — provide
+        ''uid'' + ''operations'' to make targeted changes to an existing dashboard.
+        One of these two modes is required; ''folderUid''\, ''message''\, and ''overwrite''
+        are supplementary and do nothing on their own. Patch operations support JSONPaths
+        like ''$.panels[0].targets[0].expr''\, ''$.panels[1].title''\, ''$.panels[2].targets[0].datasource''.
+        Append to arrays with ''/- '' syntax: ''$.panels/- ''. Remove by index: {"op":
+        "remove"\, "path": "$.panels[2]"}. Multiple removes on the same array are
+        automatically reordered to avoid index-shifting issues. Note: only numeric
+        array indices are supported in patch paths; filter expressions like [?(@.id==2)]
+        and wildcards like [*] are not supported.'
+      name: update_dashboard
+    observedGeneration: 1
+- apiVersion: kagent.dev/v1alpha2
+  kind: RemoteMCPServer
+  metadata:
+    annotations:
+      argocd.argoproj.io/tracking-id: kagent:kagent.dev/RemoteMCPServer:kagent/kagent-tool-server
+    creationTimestamp: "2026-03-15T21:13:38Z"
+    generation: 1
+    labels:
+      app.kubernetes.io/instance: kagent
+      app.kubernetes.io/managed-by: Helm
+      app.kubernetes.io/name: kagent
+      app.kubernetes.io/part-of: kagent
+      app.kubernetes.io/version: 0.8.0-beta6
+      helm.sh/chart: kagent-0.8.0-beta6
+    name: kagent-tool-server
+    namespace: kagent
+    resourceVersion: "33298786"
+    uid: 34af0028-bc99-485b-ba74-3a952d9dc68e
+  spec:
+    description: Official KAgent tool server
+    protocol: STREAMABLE_HTTP
+    sseReadTimeout: 5m0s
+    terminateOnClose: true
+    timeout: 30s
+    url: http://kagent-tools.kagent:8084/mcp
+  status:
+    conditions:
+    - lastTransitionTime: "2026-04-03T18:16:40Z"
+      message: Remote MCP server configuration accepted
+      observedGeneration: 1
+      reason: Reconciled
+      status: "True"
+      type: Accepted
+    discoveredTools:
+    - description: Check the logs of the Argo Rollouts Gateway API plugin
+      name: argo_check_plugin_logs
+    - description: Pause a rollout
+      name: argo_pause_rollout
+    - description: Promote a paused rollout to the next step
+      name: argo_promote_rollout
+    - description: List rollouts or experiments
+      name: argo_rollouts_list
+    - description: Set the image of a rollout
+      name: argo_set_rollout_image
+    - description: Verify that the Argo Rollouts controller is installed and running
+      name: argo_verify_argo_rollouts_controller_install
+    - description: Verify the installation status of the Argo Rollouts Gateway API
+        plugin
+      name: argo_verify_gateway_plugin
+    - description: Verify that the kubectl Argo Rollouts plugin is installed
+      name: argo_verify_kubectl_plugin_install
+    - description: Connect to a remote cluster for cluster mesh
+      name: cilium_connect_to_remote_cluster
+    - description: Delete a key from the kvstore for the cluster
+      name: cilium_delete_key_from_kv_store
+    - description: Delete a PCAP recorder for the cluster
+      name: cilium_delete_pcap_recorder
+    - description: Delete policy rules for the cluster
+      name: cilium_delete_policy_rules
+    - description: Delete a service from the cluster
+      name: cilium_delete_service
+    - description: Delete XDP CIDR filters for the cluster
+      name: cilium_delete_xdp_cidr_filters
+    - description: Disconnect an endpoint from the network
+      name: cilium_disconnect_endpoint
+    - description: Disconnect from a remote cluster
+      name: cilium_disconnect_remote_cluster
+    - description: Display the encryption state for the cluster
+      name: cilium_display_encryption_state
+    - description: Display policy node information for the cluster
+      name: cilium_display_policy_node_information
+    - description: Display selectors for the cluster
+      name: cilium_display_selectors
+    - description: Flush the IPsec state for the cluster
+      name: cilium_flush_ipsec_state
+    - description: Manage the FQDN cache for the cluster
+      name: cilium_fqdn_cache
+    - description: Get BPF map for the cluster
+      name: cilium_get_bpf_map
+    - description: Get the status of the Cilium daemon for the cluster
+      name: cilium_get_daemon_status
+    - description: List the details of an endpoint in the cluster
+      name: cilium_get_endpoint_details
+    - description: Get the health of an endpoint in the cluster
+      name: cilium_get_endpoint_health
+    - description: Get the logs of an endpoint in the cluster
+      name: cilium_get_endpoint_logs
+    - description: Get the list of all endpoints in the cluster
+      name: cilium_get_endpoints_list
+    - description: Get the details of an identity in the cluster
+      name: cilium_get_identity_details
+    - description: Get a key from the kvstore for the cluster
+      name: cilium_get_kv_store_key
+    - description: Get a PCAP recorder for the cluster
+      name: cilium_get_pcap_recorder
+    - description: Get information about a service in the cluster
+      name: cilium_get_service_information
+    - description: Install Cilium on the cluster
+      name: cilium_install_cilium
+    - description: List BGP peers
+      name: cilium_list_bgp_peers
+    - description: List BGP routes
+      name: cilium_list_bgp_routes
+    - description: List BPF map events for the cluster
+      name: cilium_list_bpf_map_events
+    - description: List BPF maps for the cluster
+      name: cilium_list_bpf_maps
+    - description: List cluster nodes for the cluster
+      name: cilium_list_cluster_nodes
+    - description: List the Envoy configuration for a resource in the cluster
+      name: cilium_list_envoy_config
+    - description: List all identities in the cluster
+      name: cilium_list_identities
+    - description: List the IP addresses for the cluster
+      name: cilium_list_ip_addresses
+    - description: List local redirect policies for the cluster
+      name: cilium_list_local_redirect_policies
+    - description: List metrics for the cluster
+      name: cilium_list_metrics
+    - description: List node IDs for the cluster
+      name: cilium_list_node_ids
+    - description: List PCAP recorders for the cluster
+      name: cilium_list_pcap_recorders
+    - description: List services for the cluster
+      name: cilium_list_services
+    - description: List XDP CIDR filters for the cluster
+      name: cilium_list_xdp_cidr_filters
+    - description: Manage the configuration of an endpoint in the cluster
+      name: cilium_manage_endpoint_config
+    - description: Manage the labels (add or delete) of an endpoint in the cluster
+      name: cilium_manage_endpoint_labels
+    - description: Request debugging information for the cluster
+      name: cilium_request_debugging_information
+    - description: Set a key in the kvstore for the cluster
+      name: cilium_set_kv_store_key
+    - description: Show cluster mesh status
+      name: cilium_show_cluster_mesh_status
+    - description: Show Cilium configuration options
+      name: cilium_show_configuration_options
+    - description: Show the DNS names for the cluster
+      name: cilium_show_dns_names
+    - description: Show Cilium features status
+      name: cilium_show_features_status
+    - description: Show the IP cache information for the cluster
+      name: cilium_show_ip_cache_information
+    - description: Show load information for the cluster
+      name: cilium_show_load_information
+    - description: Get the status and version of Cilium installation
+      name: cilium_status_and_version
+    - description: Enable or disable cluster mesh
+      name: cilium_toggle_cluster_mesh
+    - description: Toggle a Cilium configuration option
+      name: cilium_toggle_configuration_option
+    - description: Enable or disable Hubble
+      name: cilium_toggle_hubble
+    - description: Uninstall Cilium from the cluster
+      name: cilium_uninstall_cilium
+    - description: Update a PCAP recorder for the cluster
+      name: cilium_update_pcap_recorder
+    - description: Update a service in the cluster
+      name: cilium_update_service
+    - description: Update XDP CIDR filters for the cluster
+      name: cilium_update_xdp_cidr_filters
+    - description: Upgrade Cilium on the cluster
+      name: cilium_upgrade_cilium
+    - description: Validate Cilium network policies for the cluster
+      name: cilium_validate_cilium_network_policies
+    - description: Returns the current date and time in ISO 8601 format.
+      name: datetime_get_current_time
+    - description: Get extended information about a Helm release
+      name: helm_get_release
+    - description: List Helm releases in a namespace
+      name: helm_list_releases
+    - description: Add a Helm repository
+      name: helm_repo_add
+    - description: Update information of available charts locally from chart repositories
+      name: helm_repo_update
+    - description: Uninstall a Helm release
+      name: helm_uninstall
+    - description: Upgrade or install a Helm release
+      name: helm_upgrade
+    - description: Analyze Istio cluster configuration for issues
+      name: istio_analyze_cluster_configuration
+    - description: Apply a waypoint resource to the cluster
+      name: istio_apply_waypoint
+    - description: Delete a waypoint resource from the cluster
+      name: istio_delete_waypoint
+    - description: Generate Istio manifest for a given profile
+      name: istio_generate_manifest
+    - description: Generate a waypoint resource YAML
+      name: istio_generate_waypoint
+    - description: Install Istio with a specified configuration profile
+      name: istio_install_istio
+    - description: List all waypoints in the mesh
+      name: istio_list_waypoints
+    - description: Get specific proxy configuration for a single pod
+      name: istio_proxy_config
+    - description: Get Envoy proxy status for pods, retrieves last sent and acknowledged
+        xDS sync from Istiod to each Envoy in the mesh
+      name: istio_proxy_status
+    - description: List remote clusters registered with Istio
+      name: istio_remote_clusters
+    - description: Get Istio version information
+      name: istio_version
+    - description: Get the status of a waypoint resource
+      name: istio_waypoint_status
+    - description: Get the ztunnel configuration for a namespace
+      name: istio_ztunnel_config
+    - description: Add or update annotations on a Kubernetes resource
+      name: k8s_annotate_resource
+    - description: Apply a YAML manifest to the Kubernetes cluster
+      name: k8s_apply_manifest
+    - description: Check connectivity to a service using a temporary curl pod
+      name: k8s_check_service_connectivity
+    - description: Create a Kubernetes resource from YAML content
+      name: k8s_create_resource
+    - description: Create a Kubernetes resource from a URL pointing to a YAML manifest
+      name: k8s_create_resource_from_url
+    - description: Delete a Kubernetes resource
+      name: k8s_delete_resource
+    - description: Describe a Kubernetes resource in detail
+      name: k8s_describe_resource
+    - description: Execute a command in a Kubernetes pod
+      name: k8s_execute_command
+    - description: Generate a Kubernetes resource YAML from a description
+      name: k8s_generate_resource
+    - description: Get available Kubernetes API resources
+      name: k8s_get_available_api_resources
+    - description: Get cluster configuration details
+      name: k8s_get_cluster_configuration
+    - description: Get events from a Kubernetes namespace
+      name: k8s_get_events
+    - description: Get logs from a Kubernetes pod
+      name: k8s_get_pod_logs
+    - description: Get the YAML representation of a Kubernetes resource
+      name: k8s_get_resource_yaml
+    - description: Get Kubernetes resources using kubectl
+      name: k8s_get_resources
+    - description: Add or update labels on a Kubernetes resource
+      name: k8s_label_resource
+    - description: Patch a Kubernetes resource using strategic merge patch
+      name: k8s_patch_resource
+    - description: Remove an annotation from a Kubernetes resource
+      name: k8s_remove_annotation
+    - description: Remove a label from a Kubernetes resource
+      name: k8s_remove_label
+    - description: Perform rollout operations on Kubernetes resources (history, pause,
+        restart, resume, status, undo)
+      name: k8s_rollout
+    - description: Scale a Kubernetes deployment
+      name: k8s_scale
+    - description: Check if Kubescape operator is installed and operational. Verifies
+        namespace, operator pods, storage pods, CRDs, and scan data availability.
+      name: kubescape_check_health
+    - description: Get detailed runtime behavior profile for a specific workload.
+        Shows what processes run, what files are accessed, what system calls are made,
+        and what capabilities are used per container. Compare with CVE findings to
+        prioritize remediation - focus on vulnerabilities affecting actively used
+        components.
+      name: kubescape_get_application_profile
+    - description: Get detailed configuration security scan results for a specific
+        workload, including failed controls and remediation guidance.
+      name: kubescape_get_configuration_scan
+    - description: Get detailed network connections for a specific workload. Shows
+        all observed ingress and egress traffic with DNS names, IPs, ports, and protocols.
+        Use this to verify if a workload with a vulnerability is actually exposed
+        to the network.
+      name: kubescape_get_network_neighborhood
+    - description: Get detailed information about a specific CVE in a vulnerability
+        manifest, including affected packages and fix information.
+      name: kubescape_get_vulnerability_details
+    - description: 'List ApplicationProfiles showing runtime behavior of workloads.
+        These profiles capture: executed processes (Execs), file access patterns (Opens),
+        system calls (Syscalls), Linux capabilities used, and HTTP endpoints. Use
+        this data to prioritize vulnerability findings - a CVE in an unused package
+        is lower priority than one in an actively running process. Requires ''capabilities.runtimeObservability=enable''
+        in Kubescape Helm chart.'
+      name: kubescape_list_application_profiles
+    - description: List configuration security scan results from Kubescape operator.
+        Shows workloads that have been scanned for security misconfigurations.
+      name: kubescape_list_configuration_scans
+    - description: 'List NetworkNeighborhoods showing actual network communication
+        patterns of workloads. These capture: ingress connections (who talks TO the
+        workload), egress connections (who the workload talks TO), including DNS names,
+        IP addresses, ports, and protocols. Use this to understand attack surface
+        and prioritize network-related security findings. Requires ''capabilities.runtimeObservability=enable''
+        in Kubescape Helm chart.'
+      name: kubescape_list_network_neighborhoods
+    - description: List all CVEs/vulnerabilities found in a specific vulnerability
+        manifest. Returns severity summary and vulnerability details.
+      name: kubescape_list_vulnerabilities
+    - description: List vulnerability manifests from Kubescape operator. Returns vulnerability
+        scan results at image or workload level.
+      name: kubescape_list_vulnerability_manifests
+    - description: Get all available labels from Prometheus
+      name: prometheus_label_names_tool
+    - description: Generate a PromQL query
+      name: prometheus_promql_tool
+    - description: Execute a PromQL range query against Prometheus
+      name: prometheus_query_range_tool
+    - description: Execute a PromQL query against Prometheus
+      name: prometheus_query_tool
+    - description: Get all Prometheus targets and their status
+      name: prometheus_targets_tool
+    - description: Execute shell commands
+      name: shell
+    observedGeneration: 1
+kind: List
+metadata:
+  resourceVersion: ""

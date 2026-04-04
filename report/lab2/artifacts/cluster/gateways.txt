@@ -1,0 +1,2 @@
+NAMESPACE             NAME                 CLASS          ADDRESS         PROGRAMMED   AGE
+agentgateway-system   agentgateway-proxy   agentgateway   192.168.0.251   True         19d
