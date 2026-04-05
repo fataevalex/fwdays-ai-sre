@@ -67,6 +67,7 @@ Say hello and answer in one short sentence
 Я сказав "Привіт!".
 
 ---
+![echo-agent](artifacts/screenshots/lab7-1.png)
 
 ## Аналіз результату
 
