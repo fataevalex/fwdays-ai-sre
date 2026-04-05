@@ -10,7 +10,7 @@ spec:
   source:
     repoURL: https://github.com/fataevalex/fwdays-ai-sre.git
     targetRevision: main
-    path: apps/ha-agent/chart
+    path: ha-agent/chart
     helm:
       releaseName: ha-agent
       valuesObject:
