@@ -12,6 +12,7 @@ APP_VERSION = "1.0.0"
 
 MCP_URL = os.getenv("HA_MCP_URL", "http://homeassistant.local:8123/api/mcp")
 HA_TOKEN = os.getenv("HA_TOKEN", "")
+AGENT_URL = os.getenv("AGENT_URL", "https://ha-agent.local")
 
 app = FastAPI(title=APP_NAME, version=APP_VERSION)
 
@@ -61,7 +62,7 @@ def build_agent_card() -> dict[str, Any]:
             "organization": "fataevalex",
             "url": "https://github.com/fataevalex/fwdays-ai-sre",
         },
-        "url": "http://localhost:8000",
+        "url": AGENT_URL,
         "capabilities": {
             "streaming": False,
             "pushNotifications": False,

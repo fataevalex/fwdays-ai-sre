@@ -8,6 +8,7 @@ image:
 env:
   haMcpUrl: ""
   haToken: ""
+  agentUrl: "https://ha-agent.local"
 
 existingSecret: ""
 

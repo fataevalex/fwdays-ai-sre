@@ -40,6 +40,8 @@ spec:
             - name: HA_TOKEN
               value: {{ .Values.env.haToken | quote }}
             {{- end }}
+            - name: AGENT_URL
+              value: {{ printf "https://%s" .Values.ingress.host | quote }}
           livenessProbe:
             httpGet:
               path: /healthz
