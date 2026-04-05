@@ -1,0 +1,33 @@
+replicaCount: 1
+
+image:
+  repository: ghcr.io/fataevalex/ha-agent
+  tag: latest
+  pullPolicy: Always
+
+env:
+  haMcpUrl: ""
+  haToken: ""
+
+existingSecret: ""
+
+service:
+  type: ClusterIP
+  port: 80
+  targetPort: 8000
+
+ingress:
+  enabled: true
+  host: ha-agent.local
+  tls:
+    enabled: true
+    secretName: ha-agent-local-tls
+    issuer: cluster-ca-issuer
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 128Mi
+  limits:
+    cpu: 500m
+    memory: 256Mi

@@ -10,7 +10,12 @@ spec:
   source:
     repoURL: https://github.com/fataevalex/fwdays-ai-sre.git
     targetRevision: main
-    path: apps/ha-agent/overlays/minipc/deploy
+    path: apps/ha-agent/chart
+    helm:
+      releaseName: ha-agent
+      valuesObject:
+        ingress:
+          host: ha-agent.local
   destination:
     server: https://kubernetes.default.svc
     namespace: ha-agent

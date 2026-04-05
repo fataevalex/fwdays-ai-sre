@@ -1,0 +1,6 @@
+apiVersion: v2
+name: ha-agent
+description: Home Assistant A2A Agent with Agent Card (Well-Known URI)
+type: application
+version: 0.1.0
+appVersion: "1.0.0"

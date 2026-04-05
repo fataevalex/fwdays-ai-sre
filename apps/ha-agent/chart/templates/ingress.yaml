@@ -1,0 +1,47 @@
+{{- if .Values.ingress.enabled }}
+{{- if .Values.ingress.tls.enabled }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ include "ha-agent.fullname" . }}-cert
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ha-agent.labels" . | nindent 4 }}
+spec:
+  dnsNames:
+    - {{ .Values.ingress.host }}
+  duration: 2160h
+  renewBefore: 360h
+  isCA: false
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: {{ .Values.ingress.tls.issuer }}
+  secretName: {{ .Values.ingress.tls.secretName }}
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+{{- end }}
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: {{ include "ha-agent.fullname" . }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "ha-agent.labels" . | nindent 4 }}
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`{{ .Values.ingress.host }}`)
+      services:
+        - name: {{ include "ha-agent.fullname" . }}
+          port: {{ .Values.service.port }}
+  {{- if .Values.ingress.tls.enabled }}
+  tls:
+    secretName: {{ .Values.ingress.tls.secretName }}
+  {{- end }}
+{{- end }}
