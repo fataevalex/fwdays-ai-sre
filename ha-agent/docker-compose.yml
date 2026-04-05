@@ -1,0 +1,10 @@
+services:
+  ha-agent:
+    build: .
+    container_name: ha-agent
+    ports:
+      - "8000:8000"
+    environment:
+      HA_MCP_URL: ${HA_MCP_URL}
+      HA_TOKEN: ${HA_TOKEN}
+    restart: unless-stopped

@@ -9,3 +9,4 @@ resources:
   - ../../apps/qdrant/overlays/minipc
   - ../../apps/ha-mcp/overlays/minipc
   - ../../apps/ollama/overlays/minipc
+  - ../../apps/ha-agent/overlays/minipc

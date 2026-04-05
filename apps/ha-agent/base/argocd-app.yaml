@@ -1,0 +1,23 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: ha-agent
+  namespace: argocd
+  annotations:
+    argocd.argoproj.io/sync-wave: "2"
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/fataevalex/fwdays-ai-sre.git
+    targetRevision: main
+    path: apps/ha-agent/overlays/minipc/deploy
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: ha-agent
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true

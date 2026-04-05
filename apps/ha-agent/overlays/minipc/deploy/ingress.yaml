@@ -1,0 +1,37 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: ha-agent-local-cert
+  namespace: ha-agent
+spec:
+  dnsNames:
+    - ha-agent.local
+  duration: 2160h
+  renewBefore: 360h
+  isCA: false
+  issuerRef:
+    group: cert-manager.io
+    kind: ClusterIssuer
+    name: cluster-ca-issuer
+  secretName: ha-agent-local-tls
+  usages:
+    - digital signature
+    - key encipherment
+    - server auth
+---
+apiVersion: traefik.io/v1alpha1
+kind: IngressRoute
+metadata:
+  name: ha-agent-local
+  namespace: ha-agent
+spec:
+  entryPoints:
+    - websecure
+  routes:
+    - kind: Rule
+      match: Host(`ha-agent.local`)
+      services:
+        - name: ha-agent
+          port: 80
+  tls:
+    secretName: ha-agent-local-tls
