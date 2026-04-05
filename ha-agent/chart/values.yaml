@@ -2,7 +2,7 @@ replicaCount: 1
 
 image:
   repository: ghcr.io/fataevalex/ha-agent
-  tag: "sha-d8ebd8d"
+  tag: "sha-4a5121e"
   pullPolicy: Always
 
 env:
