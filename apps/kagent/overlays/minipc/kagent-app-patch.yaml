@@ -39,8 +39,7 @@ spec:
           nodeSelector:
             node-pool: minipc
         grafana-mcp:
-          nodeSelector:
-            node-pool: minipc
+          enabled: false
         querydoc:
           nodeSelector:
             node-pool: minipc
