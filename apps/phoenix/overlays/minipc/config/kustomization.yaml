@@ -4,3 +4,4 @@ kind: Kustomization
 resources:
   - ingress.yaml
   - oauth2-proxy.yaml
+  - retention-cronjob.yaml
