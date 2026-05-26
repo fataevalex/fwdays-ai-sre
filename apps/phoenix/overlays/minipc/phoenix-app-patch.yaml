@@ -16,3 +16,5 @@ spec:
           enabled: false
         auth:
           enableAuth: false
+        image:
+          tag: version-16.2.0-nonroot
