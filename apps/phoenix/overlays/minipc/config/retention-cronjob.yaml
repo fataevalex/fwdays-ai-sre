@@ -41,7 +41,7 @@ spec:
                       DELETE FROM traces
                       WHERE id IN (
                         SELECT id FROM traces
-                        WHERE start_time < NOW() - INTERVAL '3 days'
+                        WHERE start_time < NOW() - INTERVAL '1 day'
                         LIMIT 50000
                       );
                       GET DIAGNOSTICS deleted = ROW_COUNT;
