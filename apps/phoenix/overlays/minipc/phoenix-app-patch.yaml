@@ -18,3 +18,11 @@ spec:
           enableAuth: false
         image:
           tag: version-16.2.0-nonroot
+        postgresql:
+          resources:
+            limits:
+              cpu: "1000m"
+              memory: "2Gi"
+            requests:
+              cpu: "200m"
+              memory: "512Mi"
