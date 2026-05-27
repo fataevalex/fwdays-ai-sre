@@ -21,7 +21,7 @@ spec:
                   valueFrom:
                     secretKeyRef:
                       name: phoenix-postgresql
-                      key: postgres-password
+                      key: POSTGRES_PASSWORD
               command:
                 - psql
                 - -h
