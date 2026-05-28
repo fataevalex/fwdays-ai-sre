@@ -15,11 +15,16 @@ spec:
                 secretRef:
                   name: openai-secret
       - providers:
-          - name: ollama-fallback
+          - name: ollama-minipc2
+            host: ollama.minipc2-ollama-amd.svc.cluster.local
+            port: 11434
+            openai:
+              model: llama3.1:8b
+          - name: ollama-home-pc
             host: 192.168.0.152
             port: 11434
             openai:
-              model: qwen2.5:latest
+              model: llama3.1:8b
 ---
 apiVersion: gateway.networking.k8s.io/v1
 kind: HTTPRoute
