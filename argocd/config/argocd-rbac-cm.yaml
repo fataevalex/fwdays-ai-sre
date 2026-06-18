@@ -8,6 +8,6 @@ metadata:
     app.kubernetes.io/part-of: argocd
 data:
   policy.csv: |
-    g, /argocd, role:admin
+    g, argocd, role:admin
   policy.default: role:''
   scopes: '[email, groups]'
