@@ -38,6 +38,13 @@ spec:
         kagent-tools:
           nodeSelector:
             node-pool: minipc
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 1000m
+              memory: 1Gi
         grafana-mcp:
           nodeSelector:
             node-pool: minipc
@@ -47,6 +54,13 @@ spec:
         querydoc:
           nodeSelector:
             node-pool: minipc
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: 500m
+              memory: 1Gi
         agents:
           k8s-agent:
             enabled: true
