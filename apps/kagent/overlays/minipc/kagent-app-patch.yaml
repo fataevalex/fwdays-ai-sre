@@ -66,13 +66,13 @@ spec:
           k8s-agent:
             enabled: true
           observability-agent:
-            enabled: false
+            enabled: true
           kgateway-agent:
             enabled: false
           istio-agent:
             enabled: false
           promql-agent:
-            enabled: false
+            enabled: true
           argo-rollouts-agent:
             enabled: false
           helm-agent:
