@@ -86,3 +86,17 @@ spec:
             enabled: false
           cilium-debug-agent:
             enabled: false
+  ignoreDifferences:
+    - group: kagent.dev
+      kind: Agent
+      jsonPointers:
+        - /spec/declarative/tools
+    # The chart doesn't expose a values knob for grafana-mcp's container args,
+    # so -allowed-hosts (needed to let mcp-grafana accept requests with a
+    # non-localhost Host header, i.e. the in-cluster Service DNS name) is
+    # patched onto the live Deployment and excluded from drift detection here.
+    - group: apps
+      kind: Deployment
+      name: kagent-grafana-mcp
+      jsonPointers:
+        - /spec/template/spec/containers/0/args
