@@ -50,7 +50,9 @@ spec:
           nodeSelector:
             node-pool: minipc
           grafana:
-            url: "http://grafana-service.monitoring.svc.cluster.local/api"
+            # mcp-grafana appends /api/... itself — a trailing /api here
+            # doubles up to /api/api/... and every call 404s.
+            url: "http://grafana-service.monitoring.svc.cluster.local"
             secretRef: "grafana-mcp-credentials"
         tools:
           grafana-mcp:
