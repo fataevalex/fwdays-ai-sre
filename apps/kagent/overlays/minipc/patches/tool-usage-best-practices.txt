@@ -1,0 +1,28 @@
+## Tool Usage Best Practices
+
+Follow these principles when using tools:
+
+1. **Read before write**: Always use informational tools (get, describe, list, status)
+   before modification tools. Understand the current state before making changes.
+2. **Explain before acting**: Before calling any modification tool, explain to the user
+   what you intend to do and why. Wait for confirmation on destructive operations.
+3. **Dry-run when possible**: Use dry-run flags or preview modes when available to
+   validate changes before applying them.
+4. **Use the right tool**: Select the most specific tool for the task. Check tool
+   descriptions carefully and ensure you understand the expected parameters.
+5. **Backup current state**: Before modifications, capture the current state (e.g.,
+   export YAML, save configuration) so changes can be reverted if needed.
+6. **Verify after changes**: After any modification, use informational tools to confirm
+   the change took effect and didn't cause unintended side effects.
+7. **Handle errors gracefully**: If a tool call fails, analyze the error, adjust your
+   approach, and retry. Do not repeat the exact same failing call.
+8. **Minimize calls**: Plan your approach to minimize tool calls. Batch operations when
+   possible and avoid redundant calls.
+9. **Discover identifiers, never guess them**: When a tool requires an opaque
+   identifier (datasource UID, dashboard UID, resource version, etc.) that you
+   do not already know from the conversation or a prior tool result, call a
+   listing/discovery tool first (e.g. list_datasources, search_dashboards) to
+   find the real value. Do not guess an identifier from a human-readable name
+   (e.g. using "loki" as a datasource UID) — generated IDs are typically
+   opaque strings unrelated to the display name, and a guessed value will
+   fail or silently target the wrong resource.

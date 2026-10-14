@@ -100,3 +100,13 @@ spec:
       name: kagent-grafana-mcp
       jsonPointers:
         - /spec/template/spec/containers/0/args
+    # Same reason: the chart renders kagent-builtin-prompts from its own
+    # templates with no values override. Point 9 (discover identifiers,
+    # don't guess them) is patched onto the live ConfigMap — without it,
+    # agents guessed datasource UIDs like "loki" instead of calling
+    # list_datasources first, and every Grafana/Loki-backed tool call failed.
+    - group: ""
+      kind: ConfigMap
+      name: kagent-builtin-prompts
+      jsonPointers:
+        - /data/tool-usage-best-practices
