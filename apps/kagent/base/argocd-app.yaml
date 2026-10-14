@@ -60,3 +60,7 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - ServerSideApply=true
+      # Required for ignoreDifferences to actually be respected during
+      # ServerSideApply syncs — without it, ignoreDifferences only affects
+      # diff display, and sync still overwrites the ignored fields.
+      - RespectIgnoreDifferences=true
