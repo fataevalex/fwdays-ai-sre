@@ -49,9 +49,12 @@ spec:
         grafana-mcp:
           nodeSelector:
             node-pool: minipc
+          grafana:
+            url: "http://grafana-service.monitoring.svc.cluster.local/api"
+            secretRef: "grafana-mcp-credentials"
         tools:
           grafana-mcp:
-            enabled: false
+            enabled: true
         querydoc:
           nodeSelector:
             node-pool: minipc
